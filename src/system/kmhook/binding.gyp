@@ -21,19 +21,19 @@
               "-framework ApplicationServices", 
             ],
             'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES', # -fvisibility=hidden
-            "OTHER_CPLUSPLUSFLAGS": ["-std=c++17"],
-            "CLANG_CXX_LANGUAGE_STANDARD": "c++17"
+            "OTHER_CPLUSPLUSFLAGS": ["-std=c++20"],
+            "CLANG_CXX_LANGUAGE_STANDARD": "c++20"
           }
         }],
         ['OS=="win"', {
           "msvs_settings": {
             "VCCLCompilerTool": {
-              "AdditionalOptions": ["/std:c++17"]
+              "AdditionalOptions": ["/std:c++20"]
             }
           }
         }],
         ['OS=="linux"', {
-          "cflags_cc": ["-std=c++17"]
+          "cflags_cc": ["-std=c++20"]
         }]
       ]
     }

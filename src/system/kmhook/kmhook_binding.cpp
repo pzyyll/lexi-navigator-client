@@ -26,7 +26,9 @@ class KMHookWrapper : public Napi::ObjectWrap<KMHookWrapper> {
                         &KMHookWrapper::UnregisterAllMouse),
          InstanceMethod("Start", &KMHookWrapper::Start),
          InstanceMethod("Stop", &KMHookWrapper::Stop),
-         InstanceMethod("StartWithLoop", &KMHookWrapper::StartWithLoop)});
+         InstanceMethod("StartWithLoop", &KMHookWrapper::StartWithLoop),
+         InstanceMethod("SetDoubleClickInterval", &KMHookWrapper::SetDoubleClickInterval),
+         });
 
     constructor = Napi::Persistent(func);
     constructor.SuppressDestruct();
@@ -290,7 +292,18 @@ class KMHookWrapper : public Napi::ObjectWrap<KMHookWrapper> {
     this->_kmhook->StartWithLoop();
     return env.Undefined();
   }
-
+  Napi::Value SetDoubleClickInterval(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (!CheckArgsLenght(info, 1)) {
+      return env.Null();
+    }
+    if (!CheckArgIsNumber(info, 0)) {
+      return env.Null();
+    }
+    unsigned int interval = info[0].As<Napi::Number>().Uint32Value();
+    this->_kmhook->SetDoubleClickInterval(interval);
+    return env.Undefined();
+  }
   // Additional methods as needed...
 };
 

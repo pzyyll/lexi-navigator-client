@@ -68,7 +68,7 @@ void KMHookMacOS::_handle_modifier_event(CGEventRef event) {
   }
 
   auto now = _now_msec();
-  if (now - _cacheLastModifierInterval > _keyInterval ||
+  if (now - _cacheLastModifierInterval > _double_click_interval ||
       flags != _cacheLastModifierFlag) {
     // 超时或者按键发生变化
     _cacheModifierKey = "";
@@ -85,19 +85,19 @@ void KMHookMacOS::_handle_modifier_event(CGEventRef event) {
 
   switch (flags) {
     case kCGEventFlagMaskShift:
-      _cacheModifierKey += kModifierMap.at(kCGEventFlagMaskShift) + "+";
+      _cacheModifierKey += std::to_string(kCGEventFlagMaskShift) + "+";
       _cacheLastModifierInterval = now;
       break;
     case kCGEventFlagMaskControl:
-      _cacheModifierKey += kModifierMap.at(kCGEventFlagMaskControl) + "+";
+      _cacheModifierKey += std::to_string(kCGEventFlagMaskControl) + "+";
       _cacheLastModifierInterval = now;
       break;
     case kCGEventFlagMaskAlternate:
-      _cacheModifierKey += kModifierMap.at(kCGEventFlagMaskAlternate) + "+";
+      _cacheModifierKey += std::to_string(kCGEventFlagMaskAlternate) + "+";
       _cacheLastModifierInterval = now;
       break;
     case kCGEventFlagMaskCommand:
-      _cacheModifierKey += kModifierMap.at(kCGEventFlagMaskCommand) + "+";
+      _cacheModifierKey += std::to_string(kCGEventFlagMaskCommand) + "+";
       _cacheLastModifierInterval = now;
       break;
     default:
@@ -111,6 +111,7 @@ void KMHookMacOS::_handle_modifier_event(CGEventRef event) {
   if (!(keys.empty()) && keys.back() == '+') {
     keys.pop_back();
   }
+  keys = _get_wrapper_key(std::move(keys));
   if (!keys.empty()) this->_excute_key_event(keys);
 }
 
@@ -121,27 +122,30 @@ void KMHookMacOS::_handle_key_event(CGEventRef event) {
 
   auto now = _now_msec();
 
-  if (now - _cacheKeyInterval > _keyInterval) {
+  if (now - _cacheKeyInterval > _double_click_interval) {
     _cacheKey = "";
   }
 
-  std::string keys;
-  if (flags & kCGEventFlagMaskControl) keys += "control+";
-  if (flags & kCGEventFlagMaskShift) keys += "shift+";
-  if (flags & kCGEventFlagMaskAlternate) keys += "option+";
-  if (flags & kCGEventFlagMaskCommand) keys += "command+";
+  _cacheKey += std::to_string(keyCode) + "+";
+  _cacheKeyInterval = now;
 
-  auto keyCodeIt = kKeyCodeMap.find(keyCode);
-  if (keyCodeIt != kKeyCodeMap.end()) {
-    _cacheKey += keyCodeIt->second + "+";
-    _cacheKeyInterval = now;
-  }
+  std::string keys;
+  if (flags & kCGEventFlagMaskControl)
+    keys += std::to_string(kCGEventFlagMaskControl) + "+";
+  if (flags & kCGEventFlagMaskShift)
+    keys += std::to_string(kCGEventFlagMaskShift) + "+";
+  if (flags & kCGEventFlagMaskAlternate)
+    keys += std::to_string(kCGEventFlagMaskAlternate) + "+";
+  if (flags & kCGEventFlagMaskCommand)
+    keys += std::to_string(kCGEventFlagMaskCommand) + "+";
 
   keys += _cacheKey;
 
   if (!keys.empty() && keys.back() == '+') {
     keys.pop_back();
   }
+
+  keys = _get_wrapper_key(std::move(keys));
 
   if (!keys.empty()) this->_excute_key_event(keys);
 }
@@ -184,16 +188,20 @@ void KMHookMacOS::Stop() {
   if (!this->_runLoopSource) {
     return;
   }
-  CFRunLoopStop(CFRunLoopGetCurrent());
+  if (_start_with_loop) {
+    CFRunLoopStop(CFRunLoopGetCurrent());
+  }
 
   CFRelease(this->_eventTap);
   CFRelease(this->_runLoopSource);
 
   this->_eventTap = NULL;
   this->_runLoopSource = NULL;
+  this->_start_with_loop = false;
 }
 
 void KMHookMacOS::StartWithLoop() {
   this->Start();
+  _start_with_loop = true;
   CFRunLoopRun();
 }

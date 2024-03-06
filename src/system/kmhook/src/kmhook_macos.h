@@ -5,6 +5,7 @@
 
 #include <any>
 #include <map>
+#include <string>
 
 extern "C" {
 #include <Carbon/Carbon.h>
@@ -23,9 +24,26 @@ class KMHookMacOS : public KMHookBase {
   KMHookMacOS();
   ~KMHookMacOS();
 
-  void Start();
-  void Stop();
-  void StartWithLoop();
+  void Start() override;
+  void Stop() override;
+  void StartWithLoop() override;
+
+ protected:
+std::string _key_string_map(std::string keystr) override {
+    std::transform(keystr.begin(), keystr.end(), keystr.begin(), ::tolower);
+
+    auto codeIt = kKeyCodeMap.find(keystr);
+    if (codeIt != kKeyCodeMap.end()) {
+        return std::to_string(codeIt->second);
+    }
+
+    auto modifierCodeIt = kModifierMap.find(keystr);
+    if (modifierCodeIt != kModifierMap.end()) {
+        return std::to_string(modifierCodeIt->second);
+    }
+    return keystr;
+}
+
 
  private:
   void _handle_event(CGEventTapProxy proxy, CGEventType type, CGEventRef event);
@@ -38,10 +56,10 @@ class KMHookMacOS : public KMHookBase {
   CGEventMask _eventMask = 0;
   CFMachPortRef _eventTap = NULL;
   CFRunLoopSourceRef _runLoopSource = NULL;
+  bool _start_with_loop = false;
 
   std::map<std::string, std::any> _shortcuts;
 
-  int _keyInterval = kDefaultKeyInterval;
   int64_t _cacheKeyInterval = 0;
   std::string _cacheKey = "";
 
