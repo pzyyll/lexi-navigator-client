@@ -126,7 +126,6 @@ class KMHookBase : public KMHookProtocol {
   }
 
   std::string _get_wrapper_key(std::string &&keystr) {
-    std::cout << "keystr: " << keystr << std::endl;
     return "<" + keystr + ">";
   }
 

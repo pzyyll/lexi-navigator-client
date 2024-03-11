@@ -9,7 +9,7 @@ export const external = [...builtins, ...Object.keys('dependencies' in pkg ? (pk
 
 export function getBuildConfig(env: ConfigEnv<'build'>): UserConfig {
   const { root, mode, command } = env;
-
+  //console.trace('vite.base.config.ts : getBuildConfig : env', env);
   return {
     root,
     mode,
@@ -17,7 +17,7 @@ export function getBuildConfig(env: ConfigEnv<'build'>): UserConfig {
       // Prevent multiple builds from interfering with each other.
       emptyOutDir: false,
       // 🚧 Multiple builds may conflict.
-      outDir: 'build',
+      outDir: '.vite',
       watch: command === 'serve' ? {} : null,
       minify: command === 'build',
     },

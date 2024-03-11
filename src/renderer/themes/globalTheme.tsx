@@ -11,6 +11,7 @@ const globalTheme = createTheme({
         body: {
           height: '100%',
           width: '100%',
+          
         },
       },
     },

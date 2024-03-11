@@ -1,14 +1,30 @@
-import { app, BrowserWindow, ipcMain, globalShortcut, screen } from "electron";
+import { app, BrowserWindow, ipcMain, globalShortcut } from "electron";
 import path from "path";
 import fs from "fs";
 import { Channel } from "../common/const";
 import { createBaseWindow } from "./base";
 import { initFloatWinListener } from "./floatwind";
+import * as TranslateModule from "./translate"
 
 const rootPath = app.getAppPath();
 
 const configPath = path.join(rootPath, "app_data/config.json");
 let configData: any;
+let mainWindow: BrowserWindow;
+
+// console.log('root', app.getAppPath());
+// console.log('userData', app.getPath('userData'));
+// console.log('appData', app.getPath('appData'));
+// console.log('temp', app.getPath('temp'));
+// console.log('exe', app.getPath('exe'));
+// console.log('desktop', app.getPath('desktop'));
+// console.log('documents', app.getPath('documents'));
+// console.log('downloads', app.getPath('downloads'));
+// console.log('music', app.getPath('music'));
+// console.log('pictures', app.getPath('pictures'));
+// console.log('videos', app.getPath('videos'));
+// console.log('logs', app.getPath('logs'));
+// console.log('crashDumps', app.getPath('crashDumps'));
 
 function loadConfig() {
   try {
@@ -40,12 +56,19 @@ const createWindow = () => {
   loadConfig();
   listenEvent();
   // Create the browser window.
-  const mainWindow = createBaseWindow("/", {
+  mainWindow = createBaseWindow("/", {
     width: 800,
     height: 600,
-    webPreferences: {
-      nodeIntegration: true,
-    },
+  });
+
+  mainWindow.on("closed", () => {
+    console.log("mainWindow closed");
+    app.quit();
+  });
+
+  mainWindow.webContents.on("render-process-gone", (e, details) => {
+    console.log("render-process-gone", details);
+    app.quit();
   });
 
   globalShortcut.register("F12", () => {
@@ -63,11 +86,9 @@ const createWindow = () => {
 };
 
 const init = () => {
-  console.log("init", process.versions);
-
   createWindow();
-  initFloatWinListener();
-
+  initFloatWinListener(mainWindow);
+  TranslateModule.initTanslateModule();
 };
 
 // This method will be called when Electron has finished
@@ -85,8 +106,13 @@ app.on("window-all-closed", () => {
 });
 
 app.on("will-quit", () => {
-  console.log("will-quit main");
+  ipcMain.removeAllListeners();
   globalShortcut.unregisterAll();
+  BrowserWindow.getAllWindows().forEach(win=>{
+    win.removeAllListeners()
+    win.destroy()
+  });
+  TranslateModule.clear();
 });
 
 app.on("activate", () => {

@@ -5,6 +5,7 @@ import path from 'path';
 
 // https://vitejs.dev/config
 export default defineConfig((env) => {
+  //console.trace('vite.preload.config.ts :' + 'env', env);
   const forgeEnv = env as ConfigEnv<'build'>;
   const { forgeConfigSelf } = forgeEnv;
   const define = getBuildDefine(forgeEnv);

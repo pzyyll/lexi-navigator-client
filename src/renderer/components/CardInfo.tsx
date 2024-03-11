@@ -45,8 +45,8 @@ export default function RecipeReviewCard() {
           </IconButton>
         }
         title="Shrimp and Chorizo Paella"
-        subheader="September 14, 2016"
-      />
+      >
+      </CardHeader>
       <CardContent>
         <Typography variant="body2">
         This impressive paella is a perfect party dish and a fun meal to cook

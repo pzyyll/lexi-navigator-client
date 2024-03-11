@@ -8,17 +8,10 @@ import WindowSizeListener from "./WindowResizeListener";
 import { CssBaseline } from "@mui/material";
 
 import { TextareaBase as Textarea } from "./Textarea";
-import * as TranslateApi from "../../common/translate_api"; // Import the TranslateApi module from the correct file path
+import * as TranslateAPI from "./ipc/TranslateAPI"; // Import the TranslateAPI module from the correct file path
+import { Channel } from "@src/common/const"; // Import the Channel enum from the correct file path
 
-
-function debounce(func, wait) {
-  let timeout;
-  return function (...args) {
-    const context = this;
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func.apply(context, args), wait);
-  };
-}
+import _ from "lodash";
 
 export default function Translate() {
   const theme = useTheme();
@@ -52,6 +45,10 @@ export default function Translate() {
 
   React.useEffect(() => {
     autoResize();
+
+    window.electronAPI.invoke(Channel.GetAllTranslateApi).then((config) => {
+      console.log("GetAllTranslateApi", config);
+    });
   }, []);
 
   React.useEffect(() => {
@@ -65,18 +62,16 @@ export default function Translate() {
     autoResize();
   }, [targetText]);
 
-  const handleTranslate = debounce((value: string) => {
-    console.log("handleTranslate", value);
+  const handleTranslate = React.useCallback(_.debounce((value: string) => {
     if (value) {
-      console.log("handleTranslate empty text");
-      TranslateApi.translate(value).then((res) => {
-        console.log("translate respone", res);
-        if (res.code === 200) {
-          setTargetText(res.result.translate_text);
+      console.log("handleTranslate", value);
+      TranslateAPI.translate(value).then((res) => {
+        if (res) {
+          setTargetText(res.text);
         }
       });
     }
-  }, 500);
+  }, 500), []);
 
   const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setSourceText(event.target.value);

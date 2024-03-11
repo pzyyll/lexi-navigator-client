@@ -6,6 +6,7 @@ import path from 'path';
 
 // https://vitejs.dev/config
 export default defineConfig((env) => {
+  // console.trace('vite.renderer.config.tx : env', env);
   const forgeEnv = env as ConfigEnv<'renderer'>;
   const { root, mode, forgeConfigSelf } = forgeEnv;
   const name = forgeConfigSelf.name ?? '';
@@ -15,7 +16,7 @@ export default defineConfig((env) => {
     mode,
     base: './',
     build: {
-      outDir: `build/renderer/${name}`,
+      outDir: `.vite/renderer/${name}`,
     },
     plugins: [pluginExposeRenderer(name), react()],
     resolve: {

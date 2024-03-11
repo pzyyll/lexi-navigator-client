@@ -11,15 +11,15 @@
     "noImplicitAny": true,
     "sourceMap": true,
     "baseUrl": ".",
-    "outDir": "build",
+    "outDir": ".vite",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "paths": {
       "@src/*": ["src/*"],
       "@themes/*": ["src/renderer/themes/*"],
+      "@system/*": ["src/system/*"],
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "build"],
-
+  "exclude": ["node_modules", ".vite"],
 }
