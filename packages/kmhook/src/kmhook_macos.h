@@ -29,21 +29,20 @@ class KMHookMacOS : public KMHookBase {
   void StartWithLoop() override;
 
  protected:
-std::string _key_string_map(std::string keystr) override {
+  std::string _key_string_map(std::string keystr) override {
     std::transform(keystr.begin(), keystr.end(), keystr.begin(), ::tolower);
 
     auto codeIt = kKeyCodeMap.find(keystr);
     if (codeIt != kKeyCodeMap.end()) {
-        return std::to_string(codeIt->second);
+      return std::to_string(codeIt->second);
     }
 
     auto modifierCodeIt = kModifierMap.find(keystr);
     if (modifierCodeIt != kModifierMap.end()) {
-        return std::to_string(modifierCodeIt->second);
+      return std::to_string(modifierCodeIt->second);
     }
     return keystr;
-}
-
+  }
 
  private:
   void _handle_event(CGEventTapProxy proxy, CGEventType type, CGEventRef event);
