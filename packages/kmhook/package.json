@@ -1,0 +1,16 @@
+{
+  "name": "kmhook",
+  "version": "1.0.0",
+  "license": "MIT",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "dependencies": {
+    "node-addon-api": "^8.0.0"
+  },
+  "scripts": {
+    "test": "node test.js",
+    "build": "node-gyp rebuild",
+    "postbuild": "python ./bin/postinstall.py",
+    "postinstall": "python ./bin/postinstall.py"
+  }
+}
