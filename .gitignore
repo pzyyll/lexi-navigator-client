@@ -96,3 +96,5 @@ build_test/
 app_data/
 
 .vscode/
+
+.DS_Store
