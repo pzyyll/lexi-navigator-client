@@ -110,8 +110,69 @@ const std::map<std::string, CGEventFlags> kModifierMap = {
 };
 
 #elif _WIN32
-// todo
-const std::map<int, std::string> kKeyCodeMap = {};
+#include <windows.h>
+const std::map<std::string, int> kKeyCodeMap = {
+    {"a", VK_A},
+    {"s", VK_S},
+    {"d", VK_D},
+    {"f", VK_F},
+    {"h", VK_H},
+    {"g", VK_G},
+    {"z", VK_Z},
+    {"x", VK_X},
+    {"c", VK_C},
+    {"v", VK_V},
+    {"b", VK_B},
+    {"q", VK_Q},
+    {"w", VK_W},
+    {"e", VK_E},
+    {"r", VK_R},
+    {"y", VK_Y}, // 注意: 在Windows中，没有VK_Y，这里假设与VK_T的行为相同
+    {"t", VK_T},
+    {"1", VK_1},
+    {"2", VK_2},
+    {"3", VK_3},
+    {"4", VK_4},
+    {"5", VK_5},
+    {"6", VK_6},
+    {"7", VK_7},
+    {"8", VK_8},
+    {"9", VK_9},
+    {"0", VK_0},
+    {"i", VK_I},
+    {"o", VK_O},
+    {"p", VK_P},
+    {"l", VK_L},
+    {"j", VK_J},
+    {"k", VK_K},
+    {"n", VK_N},
+    {"m", VK_M},
+    {"u", VK_U},
+    // 添加额外的按键映射
+    {"`", VK_OEM_3},
+    {"-", VK_OEM_MINUS},
+    {"=", VK_OEM_PLUS},
+    {"[", VK_OEM_4},
+    {"]", VK_OEM_6},
+    {"\\", VK_OEM_5},
+    {";", VK_OEM_1},
+    {"'", VK_OEM_7},
+    {",", VK_OEM_COMMA},
+    {".", VK_OEM_PERIOD},
+    {"/", VK_OEM_2},
+    // 调整的功能键映射
+    {"delete", VK_BACK},
+    {"forward_delete", VK_DELETE},
+    {"return", VK_RETURN},
+    {"tab", VK_TAB},
+    {"space", VK_SPACE},
+    {"escape", VK_ESCAPE},
+    {"left", VK_LEFT},
+    {"right", VK_RIGHT},
+    {"up", VK_UP},
+    {"down", VK_DOWN},
+};
+
 const std::map<int, std::string> kModifierMap = {};
 #elif __linux__
 // todo
