@@ -28,6 +28,7 @@
           }
         }],
         ['OS=="win"', {
+          "sources": ["src/kmhook_win.cpp"],
           "msvs_settings": {
             "VCCLCompilerTool": {
               "AdditionalOptions": ["/std:c++20"],

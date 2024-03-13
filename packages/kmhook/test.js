@@ -49,4 +49,4 @@ km.RegisterShortcut("command+c+q", () => {
   km.Stop();
 });
 
-km.StarWith();
+km.StartWithLoop();

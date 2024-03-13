@@ -153,6 +153,11 @@ class KMHookBase : public KMHookProtocol {
         .count();
   }
 
+
+  bool ShortcutsEmpty() { return _shortcuts.empty(); }
+  bool MouseCallbacksEmpty() { return _mouse_callbacks.empty(); }
+  
+
   unsigned int _double_click_interval = kDefaultKeyInterval;
 
  private:

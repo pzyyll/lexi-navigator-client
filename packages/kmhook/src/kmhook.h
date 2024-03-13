@@ -9,7 +9,7 @@
 #ifdef __APPLE__
 #include "kmhook_macos.h"
 #elif _WIN32
-// todo
+#include "kmhook_win.h"
 #elif __linux__
 // todo
 #endif
@@ -21,7 +21,7 @@ static std::unique_ptr<KMHookBase> CreateKMHook() {
 #ifdef __APPLE__
   return std::make_unique<KMHookMacOS>();
 #elif _WIN32
-//todo
+  return std::make_unique<KMHookWin>();
 #elif __linux__
 //todo 
 #endif
