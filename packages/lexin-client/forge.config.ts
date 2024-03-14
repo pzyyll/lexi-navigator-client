@@ -81,7 +81,12 @@ const config: ForgeConfig = {
     }
   },
   rebuildConfig: {},
-  makers: [new MakerSquirrel({}), new MakerZIP({}, ["darwin"]), new MakerRpm({}), new MakerDeb({})],
+  makers: [
+    new MakerSquirrel({
+      iconUrl: "https://raw.githubusercontent.com/pzyyll/lexi-navigator-client/main/packages/lexin-client/resources/assets/lnb.ico",
+      setupIcon: "resources/assets/lnb.ico",
+    }), 
+    new MakerZIP({}, ["darwin"]), new MakerRpm({}), new MakerDeb({})],
   plugins: [
     new VitePlugin({
       // `build` can specify multiple entry builds, which can be Main process, Preload scripts, Worker process, etc.
