@@ -28,9 +28,15 @@ async function removeIgnoreDir(dir: string, match_pattern: RegExp[]) {
   }
 }
 
+const iconUrl = "https://raw.githubusercontent.com/pzyyll/lexi-navigator-client/main/packages/lexin-client/resources/assets/lnb.ico";
+let iconPath = path.join(__dirname, "resources/assets/lnb.ico");
+if (process.platform === "darwin") {
+  iconPath = path.join(__dirname, "resources/assets/lnb.icns");
+}
+
 const config: ForgeConfig = {
   packagerConfig: {
-    icon: "resources/assets/lnb.icns",
+    icon: iconPath,
     asar: true,
     appBundleId: "com.top.tarzipc.app",
     appVersion: "0.1.0",
@@ -83,8 +89,8 @@ const config: ForgeConfig = {
   rebuildConfig: {},
   makers: [
     new MakerSquirrel({
-      iconUrl: "https://raw.githubusercontent.com/pzyyll/lexi-navigator-client/main/packages/lexin-client/resources/assets/lnb.ico",
-      setupIcon: "resources/assets/lnb.ico",
+      iconUrl: iconUrl,
+      setupIcon: iconPath,
     }), 
     new MakerZIP({}, ["darwin"]), new MakerRpm({}), new MakerDeb({})],
   plugins: [
