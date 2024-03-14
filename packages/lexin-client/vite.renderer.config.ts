@@ -24,6 +24,7 @@ export default defineConfig((env) => {
       alias: {
         '@src': path.join(__dirname, 'src'),
         '@themes': path.join(__dirname, 'src/renderer/themes'),
+        '@icons': path.join(__dirname, 'src/renderer/assets/icons'),
       },
     },
     clearScreen: false,

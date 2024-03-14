@@ -10,7 +10,8 @@
     "package": "electron-forge package --verbose",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "eslint --ext .ts,.tsx ."
+    "lint": "eslint --ext .ts,.tsx .",
+    "build-svg": "yarn svgr -d src/renderer/icons resources/assets/icons"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.3.0",
@@ -23,6 +24,7 @@
     "@electron-forge/plugin-vite": "^7.3.0",
     "@electron-forge/shared-types": "^7.3.0",
     "@electron/fuses": "^1.7.0",
+    "@svgr/cli": "^8.1.0",
     "@types/react": "^18.2.61",
     "@types/react-dom": "^18.2.19",
     "@typescript-eslint/eslint-plugin": "^5.62.0",

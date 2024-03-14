@@ -1,8 +1,12 @@
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
-const { contextBridge, ipcRenderer } = require("electron");
+const { contextBridge, ipcRenderer, app } = require("electron");
 import { Channel } from "../common/const";
 
+const isDev = process.env.NODE_ENV === "development";
+console.log("isDev", isDev);
+
+const app_root_path = app.getAppPath();
 
 contextBridge.exposeInMainWorld("electronAPI", {
     send: (channel: Channel, data?:any) => {
@@ -19,5 +23,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
     },
     invoke: (channel: Channel, ...args:any[]) => {
         return ipcRenderer.invoke(channel, ...args)
+    },
+    getAssetsResource: (filename: string) => {
+        return path.join(app_root_path, "resources", "assets", filename);
     }
 });
