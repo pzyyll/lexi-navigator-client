@@ -30,6 +30,7 @@ async function removeIgnoreDir(dir: string, match_pattern: RegExp[]) {
 
 const config: ForgeConfig = {
   packagerConfig: {
+    icon: "resources/assets/lnb.icns",
     asar: true,
     appBundleId: "com.top.tarzipc.app",
     appVersion: "0.1.0",
@@ -72,6 +73,11 @@ const config: ForgeConfig = {
         const libpath = path.dirname(require.resolve(lib));
         await fs.copy(libpath, path.join(dest_node_modules, lib), { recursive: true });
       }
+
+      // copy resources
+      const source_resources = path.join(__dirname, "resources");
+      const dest_resources = path.join(buildPath, "resources");
+      await fs.copy(source_resources, dest_resources, { recursive: true });
     }
   },
   rebuildConfig: {},

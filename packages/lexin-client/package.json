@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "Lexi Navigator",
   "main": ".vite/main.js",
+  "icon": "src/renderer/assets/icons/lnb-solid-32.png",
   "scripts": {
     "start": "electron-forge start -- --inspect-electron",
     "package": "electron-forge package --verbose",

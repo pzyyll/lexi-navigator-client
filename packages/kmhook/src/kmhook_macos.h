@@ -6,6 +6,7 @@
 #include <any>
 #include <map>
 #include <string>
+#include <set>
 
 extern "C" {
 #include <Carbon/Carbon.h>
@@ -47,6 +48,7 @@ class KMHookMacOS : public KMHookBase {
  private:
   void _handle_event(CGEventTapProxy proxy, CGEventType type, CGEventRef event);
   void _handle_key_event(CGEventRef event);
+  void _handle_key_up_event(CGEventRef event);
   void _handle_modifier_event(CGEventRef event);
   void _handle_mouse_leftdown_event(CGEventRef event);
   void _handle_mouse_leftup_event(CGEventRef event);
@@ -65,6 +67,8 @@ class KMHookMacOS : public KMHookBase {
   uint64_t _cacheLastModifierFlag = 0;
   int64_t _cacheLastModifierInterval = 0;
   std::string _cacheModifierKey = "";
+
+  std::set<uint64_t> _cache_keys_down; 
 };
 
 }  // namespace kmhook

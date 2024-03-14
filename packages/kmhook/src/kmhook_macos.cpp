@@ -17,6 +17,7 @@ MouseEvent GetMouseEventInfo(CGEventRef event) {
 KMHookMacOS::KMHookMacOS() {
   // ...
   this->_eventMask = CGEventMaskBit(kCGEventKeyDown) |
+                     CGEventMaskBit(kCGEventKeyUp) |
                      CGEventMaskBit(kCGEventFlagsChanged) |
                      CGEventMaskBit(kCGEventLeftMouseDown) |
                      CGEventMaskBit(kCGEventLeftMouseUp) |
@@ -41,6 +42,9 @@ void KMHookMacOS::_handle_event(CGEventTapProxy proxy, CGEventType type,
       break;
     case kCGEventKeyDown:
       _handle_key_event(event);
+      break;
+    case kCGEventKeyUp:
+      _handle_key_up_event(event);
       break;
     case kCGEventLeftMouseDown:
       _handle_mouse_leftdown_event(event);
@@ -116,10 +120,23 @@ void KMHookMacOS::_handle_modifier_event(CGEventRef event) {
   if (!keys.empty()) this->_excute_key_event(keys);
 }
 
+void KMHookMacOS::_handle_key_up_event(CGEventRef event) {
+  CGKeyCode keyCode = static_cast<CGKeyCode>(
+      CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode));
+  // std::cout << "key up: " << keyCode << std::endl;
+  _cache_keys_down.erase(keyCode);
+}
+
 void KMHookMacOS::_handle_key_event(CGEventRef event) {
   CGKeyCode keyCode = static_cast<CGKeyCode>(
       CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode));
   CGEventFlags flags = CGEventGetFlags(event);
+
+  if (_cache_keys_down.find(keyCode) != _cache_keys_down.end()) {
+    return;
+  }
+
+  _cache_keys_down.insert(keyCode);
 
   auto now = _now_msec();
 
@@ -146,9 +163,8 @@ void KMHookMacOS::_handle_key_event(CGEventRef event) {
     keys.pop_back();
   }
 
-  std::cout << "keys: " << keys << std::endl;
-
   keys = _get_wrapper_key(std::move(keys));
+  // std::cout << "keys: " << keys << std::endl;
 
   if (!keys.empty()) this->_excute_key_event(keys);
 }

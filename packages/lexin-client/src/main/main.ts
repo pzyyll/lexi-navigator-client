@@ -68,7 +68,7 @@ const listenEvent = () => {
 };
 
 const initAppTray = () => {
-  appTray = new Tray(path.join(rootPath, "src/renderer/assets/icons/icon.png"));
+  appTray = new Tray(path.join(rootPath, "./resources/assets/AppIcon.appiconset/Icon-16-Template.png"));
   appTray.setToolTip("LexiNavigator");
   appTray.on("click", () => {
     if (mainWindow.isVisible()) {
@@ -99,6 +99,7 @@ const createWindow = () => {
   mainWindow = createBaseWindow("/", {
     width: 800,
     height: 600,
+    icon: path.join(rootPath, "./resources/assets/lnb.icns"),
   });
 
   // 如果是windows系统，隐藏菜单栏
@@ -152,6 +153,11 @@ app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
   }
+});
+
+app.on("before-quit", () => {
+  console.log("before-quit...")
+  isQuit = true;
 });
 
 app.on("will-quit", () => {
