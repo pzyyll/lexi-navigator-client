@@ -1,8 +1,6 @@
 import { app, BrowserWindow, ipcMain, globalShortcut, crashReporter, Menu, Tray } from "electron";
 import log from "electron-log";
 import path from "path";
-import fs from "fs";
-import { Channel } from "../common/const";
 import { createBaseWindow } from "./base";
 import { initFloatWinListener, ClearFloatWinResource } from "./floatwind";
 import * as TranslateModule from "./translate"
@@ -23,8 +21,6 @@ crashReporter.start({
 
 const rootPath = app.getAppPath();
 
-const configPath = path.join(rootPath, "app_data/config.json");
-let configData: any;
 let mainWindow: BrowserWindow;
 let appTray: Tray;
 let isQuit = false;
@@ -43,15 +39,6 @@ let isQuit = false;
 // console.log('logs', app.getPath('logs'));
 // console.log('crashDumps', app.getPath('crashDumps'));
 
-function loadConfig() {
-  try {
-    const jsonString = fs.readFileSync(configPath, "utf-8");
-    configData = JSON.parse(jsonString);
-  } catch (error) {
-    console.error("Error loading JSON file:", error);
-  }
-}
-
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
   app.quit();
@@ -62,14 +49,14 @@ const listenEvent = () => {
     event.reply("fromMain", "Hello from Main!");
   });
 
-  ipcMain.handle(Channel.GetConfig, async (event, ...args) => {
-    return configData;
-  });
+  // ipcMain.handle(Channel.GetConfig, async (event, ...args) => {
+  //   return configData;
+  // });
 };
 
 const initAppTray = () => {
 
-  let icon_path = path.join(rootPath, "./resources/assets/lnb.icns");
+  let icon_path = path.join(rootPath, "./resources/assets/AppIcon.appiconset/Icon-16-Template.png");
   if (process.platform == "win32") {
     icon_path = path.join(rootPath, "./resources/assets/ln_white_icon.ico");
   }
@@ -98,8 +85,6 @@ const initAppTray = () => {
 }
 
 const createWindow = () => {
-  // load config
-  loadConfig();
   listenEvent();
   // Create the browser window.
 
@@ -165,10 +150,6 @@ app.on("window-all-closed", () => {
 app.on("before-quit", () => {
   console.log("before-quit...")
   isQuit = true;
-});
-
-app.on("will-quit", () => {
-  console.log('will-quit ...')
   ipcMain.removeAllListeners();
   globalShortcut.unregisterAll();
   BrowserWindow.getAllWindows().forEach(win=>{
@@ -177,6 +158,18 @@ app.on("will-quit", () => {
   });
   TranslateModule.clear();
   ClearFloatWinResource();
+});
+
+app.on("will-quit", () => {
+  console.log('will-quit ...')
+  // ipcMain.removeAllListeners();
+  // globalShortcut.unregisterAll();
+  // BrowserWindow.getAllWindows().forEach(win=>{
+  //   win.removeAllListeners()
+  //   win.destroy()
+  // });
+  // TranslateModule.clear();
+  // ClearFloatWinResource();
 });
 
 app.on("activate", () => {
