@@ -6,8 +6,9 @@ import { MakerRpm } from "@electron-forge/maker-rpm";
 import { VitePlugin } from "@electron-forge/plugin-vite";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
-import fs from "fs-extra";
 import path from "path";
+
+const fs = require("fs-extra");
 
 async function removeIgnoreDir(dir: string, match_pattern: RegExp[]) {
   try {
@@ -57,21 +58,6 @@ const config: ForgeConfig = {
           fs.rm(source_node_modules, { force: true, recursive: true });
         }
         await removeIgnoreDir(dest_node_modules, ignore);
-        // for (const lib of custom_libs) {
-        //   const libpath = path.dirname(require.resolve(lib));
-        //   await fs.copy(libpath, path.join(dest_node_modules, lib), { recursive: true });
-        // }
-
-        // copy extra system frameworks for macos
-        // if (platform == "darwin") {
-        //   const frameworks = ["ApplicationServices.framework"];
-        //   const target_frameworks_path = path.join(buildPath, "../../Frameworks");
-        //   fs.ensureDirSync(target_frameworks_path);
-        //   for (const framework of frameworks) {
-        //     const source_framework_path = path.join("/System/Library/Frameworks", framework);
-        //     await fs.copy(source_framework_path, path.join(target_frameworks_path, framework), { recursive: true });
-        //   }
-        // }
 
         done();
       },

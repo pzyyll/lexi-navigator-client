@@ -9,9 +9,10 @@ HHOOK KMHookWin::_kMouseHook = NULL;
 std::vector<KMHookWin *> KMHookWin::_kKeyboardInstances;
 std::vector<KMHookWin *> KMHookWin::_kMouseInstances;
 
+
 LRESULT CALLBACK KMHookWin::LowLevelKeyboardProc(int nCode, WPARAM wParam,
                                                  LPARAM lParam) {
-  if (nCode >= 0) {
+  if (nCode == HC_ACTION) {
     for (auto &k : _kKeyboardInstances) {
       k->OnKeyboardEvent(wParam, lParam);
     }
@@ -33,9 +34,33 @@ void KMHookWin::TryUnsetKeyboardHook() {
   }
 }
 
+unsigned SetModifierState(unsigned &state, const DWORD &vk_code) {
+  auto it = kWinModifierBitMap.find(vk_code);
+  if (it != kWinModifierBitMap.end()) {
+    state |= it->second;
+    return it->second;
+  }
+  return 0;
+}
+
+void UnsetModifierState(unsigned &state, const DWORD &vk_code) {
+  auto it = kWinModifierBitMap.find(vk_code);
+  if (it != kWinModifierBitMap.end()) {
+    state &= ~it->second;
+  }
+}
+
+void GetModifierStateList(unsigned &state, std::vector<unsigned> &modifiers) {
+  for (const auto &k : kKMHookModifiers) {
+    if (state & k) {
+      modifiers.push_back(k);
+    }
+  }
+}
+
 LRESULT CALLBACK KMHookWin::LowLevelMouseProc(int nCode, WPARAM wParam,
                                               LPARAM lParam) {
-  if (nCode >= 0) {
+  if (nCode == HC_ACTION) {
     for (auto &k : _kMouseInstances) {
       k->OnMouseEvent(wParam, lParam);
     }
@@ -111,11 +136,111 @@ void KMHookWin::AddListen() {
 }
 
 void KMHookWin::OnKeyboardEvent(WPARAM wParam, LPARAM lParam) {
-  // ...
-  std::cout << "Keyboard event: " << wParam << "," << lParam << std::endl;
+  // std::cout << "Keyboard event: " << wParam << "," << lParam << std::endl;
+  PKBDLLHOOKSTRUCT p = (PKBDLLHOOKSTRUCT)lParam;
+  const auto now = _now_msec();
+  switch (wParam) {
+    case WM_SYSKEYUP:
+    case WM_KEYUP: {
+      // key up
+      UnsetModifierState(_modifier_state, p->vkCode);
+      _cache_keys_state.erase(p->vkCode);
+      break;
+    }
+    case WM_SYSKEYDOWN:
+    case WM_KEYDOWN: {
+      std::vector<unsigned> modifiers;
+      std::string keys;
+      std::string smodifies;
+
+      // Key down
+      auto modifier_key = SetModifierState(_modifier_state, p->vkCode);
+      if (modifier_key) {
+        // 按下的是功能键
+        if (now - _last_modifies_time > _double_click_interval) {
+          _cache_modifies = "";
+          _cache_modifies_cnt = 0;
+        } 
+        _last_modifies_time = now;
+        _cache_modifies += std::to_string(modifier_key) + "+";
+        _cache_modifies_cnt++;
+        smodifies = _cache_modifies;
+      } else {
+        GetModifierStateList(_modifier_state, modifiers);
+        for (const auto &m : modifiers) {
+          smodifies += std::to_string(m) + "+";
+        }
+
+        if (now - _last_keys_time > _double_click_interval) {
+          _cache_keys = "";
+          _cache_keys_cnt = 0;
+        }
+
+        _last_keys_time = now;
+        _cache_keys_cnt++;
+        _cache_keys += std::to_string(p->vkCode) + "+";
+        keys = _cache_keys;
+      }
+
+      if (_cache_keys_state.find(p->vkCode) != _cache_keys_state.end()) {
+        // not repeat
+        return;
+      }
+
+      _cache_keys_state.insert(p->vkCode);
+
+      unsigned all_cnt = 0;
+      if (!smodifies.empty()) all_cnt += _cache_modifies_cnt;
+      if (!keys.empty()) all_cnt += _cache_keys_cnt;
+      if (all_cnt > 5) {
+        return;
+      }
+
+      std::string shortcut = smodifies + keys;
+      if (shortcut.empty()) {
+        return;
+      }
+      if (shortcut.back() == '+') {
+        shortcut.pop_back();
+      }
+
+      // std::cout << "Shortcut: " << shortcut << std::endl;
+      shortcut = _get_wrapper_key(std::move(shortcut));
+      _excute_key_event(shortcut);
+      break;
+    }
+    default:
+      break;
+  }
 }
 
 void KMHookWin::OnMouseEvent(WPARAM wParam, LPARAM lParam) {
   // ...
-  std::cout << "Mouse event: " << wParam << "," << lParam << std::endl;
+  // std::cout << "Mouse event: " << wParam << "," << lParam << std::endl;
+  static bool is_left_down = false;
+
+  auto msg = (PMSLLHOOKSTRUCT)lParam;
+  KMPoint point = {msg->pt.x, msg->pt.y};
+  MouseEvent event = {point};
+
+  switch (wParam) {
+    case WM_LBUTTONDOWN: {
+      is_left_down = true;
+      _excute_mouse_event(MouseEventType::kLeftDown, event);
+      break;
+    }
+    case WM_LBUTTONUP:{
+      is_left_down = false;
+      _excute_mouse_event(MouseEventType::kLeftUp, event);
+      break;
+    }
+    case WM_MOUSEMOVE:{
+      if (is_left_down) {
+        _excute_mouse_event(MouseEventType::kLeftDragged, event);
+      }
+      break;
+    }
+    default:
+      break;
+  }
 }

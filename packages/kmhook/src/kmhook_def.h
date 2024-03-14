@@ -31,7 +31,6 @@ struct MouseCallbackInfo {
   MouseCallback callback;
 };
 
-
 #ifdef __APPLE__
 #include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
@@ -110,44 +109,11 @@ const std::map<std::string, CGEventFlags> kModifierMap = {
 };
 
 #elif _WIN32
+#define NOMINMAX
 #include <windows.h>
+
 const std::map<std::string, int> kKeyCodeMap = {
-    {"a", VK_A},
-    {"s", VK_S},
-    {"d", VK_D},
-    {"f", VK_F},
-    {"h", VK_H},
-    {"g", VK_G},
-    {"z", VK_Z},
-    {"x", VK_X},
-    {"c", VK_C},
-    {"v", VK_V},
-    {"b", VK_B},
-    {"q", VK_Q},
-    {"w", VK_W},
-    {"e", VK_E},
-    {"r", VK_R},
-    {"y", VK_Y}, // 注意: 在Windows中，没有VK_Y，这里假设与VK_T的行为相同
-    {"t", VK_T},
-    {"1", VK_1},
-    {"2", VK_2},
-    {"3", VK_3},
-    {"4", VK_4},
-    {"5", VK_5},
-    {"6", VK_6},
-    {"7", VK_7},
-    {"8", VK_8},
-    {"9", VK_9},
-    {"0", VK_0},
-    {"i", VK_I},
-    {"o", VK_O},
-    {"p", VK_P},
-    {"l", VK_L},
-    {"j", VK_J},
-    {"k", VK_K},
-    {"n", VK_N},
-    {"m", VK_M},
-    {"u", VK_U},
+    // 0~9, A-Z same as ASCII
     // 添加额外的按键映射
     {"`", VK_OEM_3},
     {"-", VK_OEM_MINUS},
@@ -172,8 +138,43 @@ const std::map<std::string, int> kKeyCodeMap = {
     {"up", VK_UP},
     {"down", VK_DOWN},
 };
+// Invert the kModifierMap
 
-const std::map<int, std::string> kModifierMap = {};
+enum KMHookModifierCode {
+  kModifierCodeShift = 0x01,
+  kModifierCodeControl = 0x01 << 1,
+  kModifierCodeAlt = 0x01 << 2,
+  kModifierCodeWin = 0x01 << 3,
+};
+
+const std::vector<unsigned> kKMHookModifiers = {
+    kModifierCodeShift, kModifierCodeControl, kModifierCodeAlt,
+    kModifierCodeWin};
+
+const std::map<unsigned, unsigned> kWinModifierBitMap = {
+    {VK_LSHIFT, kModifierCodeShift},     {VK_RSHIFT, kModifierCodeShift},
+    {VK_LCONTROL, kModifierCodeControl}, {VK_RCONTROL, kModifierCodeControl},
+    {VK_LMENU, kModifierCodeAlt},        {VK_RMENU, kModifierCodeAlt},
+    {VK_LWIN, kModifierCodeWin},         {VK_RWIN, kModifierCodeWin},
+};
+
+const std::map<std::string, int> kModifierNameMap = {
+    {"shift", kModifierCodeShift},
+    {"option", kModifierCodeAlt},
+    {"alt", kModifierCodeAlt},
+    {"win", kModifierCodeWin},
+    {"control", kModifierCodeControl},
+    {"ctrlorcommand", kModifierCodeControl},
+    {"ctrl", kModifierCodeControl},
+    {"command", kModifierCodeControl},
+};
+
+enum WinMouseEventCode {
+  kMouseLeftDown = WM_LBUTTONDOWN,
+  kMouseLeftUp = WM_LBUTTONUP,
+  kMouseLeftDragged = WM_MOUSEMOVE,
+};
+
 #elif __linux__
 // todo
 const std::map<int, std::string> kKeyCodeMap = {};

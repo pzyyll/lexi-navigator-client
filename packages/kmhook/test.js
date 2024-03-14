@@ -49,4 +49,8 @@ km.RegisterShortcut("command+c+q", () => {
   km.Stop();
 });
 
+km.RegisterShortcut("alt+c+c", () => {
+  console.log("alt+c+c+pressed");
+});
+
 km.StartWithLoop();

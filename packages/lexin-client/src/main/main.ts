@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, globalShortcut, crashReporter } from "electron";
+import { app, BrowserWindow, ipcMain, globalShortcut, crashReporter, Menu, Tray } from "electron";
 import log from "electron-log";
 import path from "path";
 import fs from "fs";
@@ -26,6 +26,8 @@ const rootPath = app.getAppPath();
 const configPath = path.join(rootPath, "app_data/config.json");
 let configData: any;
 let mainWindow: BrowserWindow;
+let appTray: Tray;
+let isQuit = false;
 
 // console.log('root', app.getAppPath());
 // console.log('userData', app.getPath('userData'));
@@ -65,6 +67,29 @@ const listenEvent = () => {
   });
 };
 
+const initAppTray = () => {
+  appTray = new Tray(path.join(rootPath, "src/renderer/assets/icons/icon.png"));
+  appTray.setToolTip("LexiNavigator");
+  appTray.on("click", () => {
+    if (mainWindow.isVisible()) {
+      mainWindow.hide();
+    } else {
+      mainWindow.show();
+    }
+  });
+
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: "Exit",
+      click: (menuItem, browserWindow, event) => {
+        console.log("exit ...");
+        isQuit = true;
+        app.quit();
+      },
+    },
+  ]);
+  appTray.setContextMenu(contextMenu);
+}
 
 const createWindow = () => {
   // load config
@@ -76,14 +101,21 @@ const createWindow = () => {
     height: 600,
   });
 
-  mainWindow.on("closed", () => {
-    console.log("mainWindow closed");
-    ClearFloatWinResource();
-    app.quit();
+  // 如果是windows系统，隐藏菜单栏
+  if (process.platform === "win32") {
+    Menu.setApplicationMenu(null);
+  }
+
+  mainWindow.on("close", (e) => {
+    if (!isQuit) {
+      e.preventDefault();
+      mainWindow.hide();
+    }
   });
 
   mainWindow.webContents.on("render-process-gone", (e, details) => {
     console.log("render-process-gone", details);
+    ClearFloatWinResource();
     app.quit();
   });
 
@@ -104,6 +136,7 @@ const createWindow = () => {
 const init = () => {
   createWindow();
   initFloatWinListener(mainWindow);
+  initAppTray();
   TranslateModule.initTanslateModule();
 };
 
@@ -122,6 +155,7 @@ app.on("window-all-closed", () => {
 });
 
 app.on("will-quit", () => {
+  console.log('will-quit ...')
   ipcMain.removeAllListeners();
   globalShortcut.unregisterAll();
   BrowserWindow.getAllWindows().forEach(win=>{
@@ -129,6 +163,7 @@ app.on("will-quit", () => {
     win.destroy()
   });
   TranslateModule.clear();
+  ClearFloatWinResource();
 });
 
 app.on("activate", () => {

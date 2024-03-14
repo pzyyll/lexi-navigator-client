@@ -25,7 +25,7 @@ const transTheme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          "--Common-BackgroundColor": "rgba(255, 255, 255, 0.8)",
+          "--Common-BackgroundColor": "rgba(255, 255, 255, 0.9)",
           backgroundColor: 'var(--Common-BackgroundColor)',
         },
       },

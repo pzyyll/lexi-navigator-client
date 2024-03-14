@@ -37,6 +37,8 @@ class KMHookBase : public KMHookProtocol {
   virtual ~KMHookBase() = default;
 
   void RegisterShortcut(std::string shortcut, Callback &&callback) override {
+    // std::cout << "RegisterShortcut: " << _trans_shortcut(shortcut) <<
+    // std::endl;
     _shortcuts[_trans_shortcut(shortcut)] = std::forward<Callback>(callback);
   }
 
@@ -141,6 +143,7 @@ class KMHookBase : public KMHookProtocol {
   }
 
   void _excute_key_event(std::string &shortcut) {
+    // std::cout << "excute key event: " << shortcut << std::endl;
     auto result = _shortcuts.find(_trans_shortcut(shortcut));
     if (result != _shortcuts.end()) {
       result->second();
@@ -153,10 +156,8 @@ class KMHookBase : public KMHookProtocol {
         .count();
   }
 
-
   bool ShortcutsEmpty() { return _shortcuts.empty(); }
   bool MouseCallbacksEmpty() { return _mouse_callbacks.empty(); }
-  
 
   unsigned int _double_click_interval = kDefaultKeyInterval;
 
