@@ -68,7 +68,13 @@ const listenEvent = () => {
 };
 
 const initAppTray = () => {
-  appTray = new Tray(path.join(rootPath, "./resources/assets/AppIcon.appiconset/Icon-16-Template.png"));
+
+  let icon_path = path.join(rootPath, "./resources/assets/lnb.icns");
+  if (process.platform == "win32") {
+    icon_path = path.join(rootPath, "./resources/assets/ln_white_icon.ico");
+  }
+
+  appTray = new Tray(icon_path);
   appTray.setToolTip("LexiNavigator");
   appTray.on("click", () => {
     if (mainWindow.isVisible()) {
@@ -96,6 +102,7 @@ const createWindow = () => {
   loadConfig();
   listenEvent();
   // Create the browser window.
+
   mainWindow = createBaseWindow("/", {
     width: 800,
     height: 600,
