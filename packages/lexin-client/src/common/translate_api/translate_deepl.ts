@@ -79,8 +79,8 @@ export class TranslateDeepL implements ITranslate {
   async batch_translate(texts: string[], source?: string, target?: string, ...props: any[]) {
     this.checkNetworkApi();
 
-    target = target || "en";
-    target = target.toLowerCase();
+    target = target || "EN";
+    target = target.toUpperCase();
 
     const cached_result = [];
     const uncached_texts = [];

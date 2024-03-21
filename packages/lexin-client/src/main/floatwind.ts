@@ -169,9 +169,9 @@ function triggerFloatWin(onShow?: () => void){
     
     if (floatWin && !floatWin.isVisible()){
       const { x, y } = getShowPosition(floatWin);
+      setMouseEventOutWin();
       floatWin.show();
       floatWin.setPosition(x, y);
-      setMouseEventOutWin();
     }
   }
 

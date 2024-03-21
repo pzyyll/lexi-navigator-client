@@ -4,11 +4,11 @@ import { Box, Container } from "@mui/system";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 
-import WindowSizeListener from "./WindowResizeListener";
+import WindowSizeListener from "../components/WindowResizeListener";
 import { CssBaseline } from "@mui/material";
 
-import { TextareaBase as Textarea } from "./Textarea";
-import * as TranslateAPI from "./ipc/TranslateAPI"; // Import the TranslateAPI module from the correct file path
+import { TextareaBase as Textarea } from "../components/Textarea";
+import * as TranslateAPI from "../components/ipc/TranslateAPI"; // Import the TranslateAPI module from the correct file path
 import { Channel } from "@src/common/const"; // Import the Channel enum from the correct file path
 
 import _ from "lodash";
@@ -65,7 +65,9 @@ export default function Translate() {
   const handleTranslate = React.useCallback(_.debounce((value: string) => {
     if (value) {
       console.log("handleTranslate", value);
-      TranslateAPI.translate(value).then((res) => {
+      TranslateAPI.translate({
+        text: value
+      }).then((res) => {
         if (res) {
           setTargetText(res.text);
         }

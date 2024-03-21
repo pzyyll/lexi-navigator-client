@@ -20,5 +20,6 @@ export enum TranslateType {
     DeepL = "deepl",
     Google = "google",
     Lexin = "lexin",
+    Baidu = "baidu",
 }
 

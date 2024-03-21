@@ -1,6 +1,14 @@
 import { Channel, TranslateType } from "@src/common/const";
 
-export async function translate(text: string, source = "", target = "", api_type = "") {
+export interface TranslateProps {
+  text: string;
+  source?: string;
+  target?: string;
+  api_type?: string;
+}
+
+export async function translate(props: TranslateProps) {
+  let {text, source, target, api_type } = props;
   api_type = api_type || TranslateType.DeepL;
   try {
     if (!target) {
@@ -15,6 +23,7 @@ export async function translate(text: string, source = "", target = "", api_type
         target = "zh";
       }
     }
+    console.log("translate", text, source, target, api_type);
     const res = await window.electronAPI.invoke(Channel.Translate, {
       text: text,
       source: source,

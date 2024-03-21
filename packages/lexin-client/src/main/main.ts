@@ -4,6 +4,7 @@ import path from "path";
 import { createBaseWindow } from "./base";
 import { initFloatWinListener, ClearFloatWinResource } from "./floatwind";
 import * as TranslateModule from "./translate"
+import { main } from "@popperjs/core";
 
 log.transports.file.level = "info";
 log.transports.console.level = "info";
@@ -63,12 +64,17 @@ const initAppTray = () => {
 
   appTray = new Tray(icon_path);
   appTray.setToolTip("LexiNavigator");
+
   appTray.on("click", () => {
     if (mainWindow.isVisible()) {
       mainWindow.hide();
     } else {
       mainWindow.show();
     }
+  });
+
+  appTray.on("right-click", () => {
+    appTray.popUpContextMenu(contextMenu);
   });
 
   const contextMenu = Menu.buildFromTemplate([
@@ -81,7 +87,7 @@ const initAppTray = () => {
       },
     },
   ]);
-  appTray.setContextMenu(contextMenu);
+  // appTray.setContextMenu(contextMenu);
 }
 
 const createWindow = () => {
@@ -103,6 +109,7 @@ const createWindow = () => {
     if (!isQuit) {
       e.preventDefault();
       mainWindow.hide();
+      app.dock.hide();
     }
   });
 
@@ -131,6 +138,7 @@ const init = () => {
   initFloatWinListener(mainWindow);
   initAppTray();
   TranslateModule.initTanslateModule();
+
 };
 
 // This method will be called when Electron has finished
@@ -177,6 +185,8 @@ app.on("activate", () => {
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
+  } else if (!mainWindow?.isVisible()) {
+    mainWindow?.show();
   }
 });
 

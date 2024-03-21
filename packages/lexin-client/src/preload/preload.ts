@@ -6,8 +6,6 @@ import { Channel } from "../common/const";
 const isDev = process.env.NODE_ENV === "development";
 console.log("isDev", isDev);
 
-const app_root_path = app.getAppPath();
-
 contextBridge.exposeInMainWorld("electronAPI", {
     send: (channel: Channel, data?:any) => {
         ipcRenderer.send(channel, data);
@@ -23,8 +21,5 @@ contextBridge.exposeInMainWorld("electronAPI", {
     },
     invoke: (channel: Channel, ...args:any[]) => {
         return ipcRenderer.invoke(channel, ...args)
-    },
-    getAssetsResource: (filename: string) => {
-        return path.join(app_root_path, "resources", "assets", filename);
     }
 });

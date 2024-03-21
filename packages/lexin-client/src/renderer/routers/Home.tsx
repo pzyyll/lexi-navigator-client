@@ -3,7 +3,7 @@ import React from "react";
 import TranslateIcon from "@mui/icons-material/Translate";
 import SmsIcon from "@mui/icons-material/Sms";
 
-import MiniDrawer from "./SidebarDrawer";
+import MiniDrawer from "../components/SidebarDrawer";
 import Translate from "./Translate";
 import Chat from "./Chat";
 

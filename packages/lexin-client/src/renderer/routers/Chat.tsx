@@ -1,6 +1,6 @@
 import React from "react";
 
-import RecipeReviewCard from "./CardInfo";
+import RecipeReviewCard from "../components/CardInfo";
 import { Container } from "@mui/system";
 
 export default function Chat() {

@@ -1,7 +1,7 @@
 import { app, ipcMain } from "electron";
 import fs from "fs";
 
-import { Translate, TranslateDeepL } from "@src/common/translate_api/index";
+import { Translate, TranslateDeepL, TranslateBuidu } from "@src/common/translate_api/index";
 import { TranslateType, Channel } from "@src/common/const";
 
 const configPath = app.getPath("userData") + "/api_config.json";
@@ -18,15 +18,19 @@ function loadConfig() {
   config = JSON.parse(jsonString);
 }
 
+interface TranslateWrapperProps {
+  type: TranslateType;
+}
+
 class TranslateWrapper {
   _translate: Translate;
-  _icon: string;
-  _type: TranslateType;
+  _props: TranslateWrapperProps;
 
-  constructor(translate: Translate, type: TranslateType, icon: string) {
+
+  constructor(translate: Translate, props: TranslateWrapperProps & { class_type: any }) {
     this._translate = translate;
-    this._type = type;
-    this._icon = icon;
+    const { class_type, ..._props } = props;
+    this._props = _props;
   }
 
   get translate() {
@@ -34,17 +38,16 @@ class TranslateWrapper {
   }
 
   get show_info() {
-    return {
-      icon: this._icon,
-      type: this._type,
-    };
+    return this._props;
   }
 }
 
 const translate_api_info = {
   [TranslateType.DeepL]: {
-    icon: "deepl-logo.png",
-    translate_type: TranslateDeepL,
+    class_type: TranslateDeepL,
+  },
+  [TranslateType.Baidu]: {
+    class_type: TranslateBuidu,
   },
 };
 
@@ -52,9 +55,8 @@ function initTranslateInstance() {
   for (const [type, cfg] of Object.entries(config)) {
     if (type in translate_api_info) {
       const translate = new TranslateWrapper(
-        new translate_api_info[type].translate_type(),
-        type,
-        translate_api_info[type].icon
+        new translate_api_info[type].class_type(),
+        {type:type, ...translate_api_info[type]}
       );
       translate.translate.init(cfg);
       translates.set(type, translate);
