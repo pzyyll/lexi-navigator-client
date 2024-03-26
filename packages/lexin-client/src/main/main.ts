@@ -4,7 +4,7 @@ import path from "path";
 import { createBaseWindow } from "./base";
 import { initFloatWinListener, ClearFloatWinResource } from "./floatwind";
 import * as TranslateModule from "./translate"
-import { main } from "@popperjs/core";
+import * as Speech from "./speech";
 
 log.transports.file.level = "info";
 log.transports.console.level = "info";
@@ -68,8 +68,10 @@ const initAppTray = () => {
   appTray.on("click", () => {
     if (mainWindow.isVisible()) {
       mainWindow.hide();
+      app.dock.hide();
     } else {
       mainWindow.show();
+      app.dock.show();
     }
   });
 
@@ -138,7 +140,7 @@ const init = () => {
   initFloatWinListener(mainWindow);
   initAppTray();
   TranslateModule.initTanslateModule();
-
+  Speech.initSpeech();
 };
 
 // This method will be called when Electron has finished
@@ -166,18 +168,11 @@ app.on("before-quit", () => {
   });
   TranslateModule.clear();
   ClearFloatWinResource();
+  Speech.clear();
 });
 
 app.on("will-quit", () => {
-  console.log('will-quit ...')
-  // ipcMain.removeAllListeners();
-  // globalShortcut.unregisterAll();
-  // BrowserWindow.getAllWindows().forEach(win=>{
-  //   win.removeAllListeners()
-  //   win.destroy()
-  // });
-  // TranslateModule.clear();
-  // ClearFloatWinResource();
+  console.log('will-quit ...');
 });
 
 app.on("activate", () => {

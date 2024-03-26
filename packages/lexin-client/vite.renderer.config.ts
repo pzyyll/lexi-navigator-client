@@ -4,6 +4,7 @@ import { pluginExposeRenderer } from './vite.base.config';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs-extra';
+import tsconfigPaths from "vite-tsconfig-paths";
 
 // https://vitejs.dev/config
 export default defineConfig((env) => {
@@ -39,15 +40,14 @@ export default defineConfig((env) => {
         },
       },
     },
-    plugins: [pluginExposeRenderer(name), react()],
+    plugins: [pluginExposeRenderer(name), react(), tsconfigPaths()],
     resolve: {
       preserveSymlinks: true,
-      alias: {
-        '@src': path.join(__dirname, 'src'),
-        '@themes': path.join(__dirname, 'src/renderer/themes'),
-        '@icons': path.join(__dirname, 'src/renderer/assets/icons'),
-        '@resources': path.join(__dirname, 'resources'),
-      },
+      // alias: {
+      //   '@src': path.join(__dirname, 'src'),
+      //   '@themes': path.join(__dirname, 'src/renderer/themes'),
+      //   '@icons': path.join(__dirname, 'src/renderer/assets/icons')
+      // },
     },
     clearScreen: false,
   } as UserConfig;

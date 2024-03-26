@@ -1,6 +1,7 @@
 import { createTheme } from "@mui/material/styles";
+import BaseTheme from "./BaseTheme";
 
-const LightTheme = createTheme({
+const LightTheme = createTheme(BaseTheme, {
   palette: {
     mode: "light",
   },

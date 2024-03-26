@@ -1,22 +1,11 @@
 import { app, ipcMain } from "electron";
-import fs from "fs";
 
 import { Translate, TranslateDeepL, TranslateBuidu } from "@src/common/translate_api/index";
 import { TranslateType, Channel } from "@src/common/const";
+import { get_translate_config } from "./config";
 
-const configPath = app.getPath("userData") + "/api_config.json";
-
-let config;
+let config = get_translate_config();
 let translates = new Map();
-
-function loadConfig() {
-  // Load the configuration from the main process
-  if (config) {
-    return;
-  }
-  const jsonString = fs.readFileSync(configPath, "utf-8");
-  config = JSON.parse(jsonString);
-}
 
 interface TranslateWrapperProps {
   type: TranslateType;
@@ -109,11 +98,11 @@ function clearEventListeners() {
   ipcMain.removeHandler(Channel.Translate);
   ipcMain.removeHandler(Channel.LanguageList);
   ipcMain.removeHandler(Channel.GetAllTranslateApi);
+  ipcMain.removeHandler(Channel.DetectLanguage);
 }
 
 export function initTanslateModule() {
   try {
-    loadConfig();
     initTranslateInstance();
     initEventListeners();
   } catch (error) {

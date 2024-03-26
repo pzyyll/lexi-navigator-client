@@ -7,7 +7,7 @@ import { CssBaseline } from "@mui/material";
 import Home from "./routers/Home";
 import TranslateSimple from "./routers/TranslateSimple";
 
-import Themes from "./themes";
+import Themes from "@themes";
 
 //css
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -25,11 +25,9 @@ function App() {
   const [theme, setTheme] = React.useState(Themes.light);
 
   return (
-    <ThemeProvider theme={Themes.global}>
+    <ThemeProvider theme={theme}>
       <CssBaseline />
-      <ThemeProvider theme={theme}>
-        <RouterProvider router={router} />
-      </ThemeProvider>
+      <RouterProvider router={router} />
     </ThemeProvider>
   );
 }

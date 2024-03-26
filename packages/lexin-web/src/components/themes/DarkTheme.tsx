@@ -1,14 +1,16 @@
 import { createTheme } from "@mui/material/styles";
 
-const DarkTheme = createTheme({
+import BaseTheme from "./BaseTheme";
+
+const DarkTheme = createTheme(BaseTheme, {
   palette: {
     mode: "dark",
   },
   components: {
     MuiCssBaseline: {
       styleOverrides: {
-        'body': {
-          background: 'rgba(0, 0, 0, 1)',
+        body: {
+          background: "rgba(0, 0, 0, 1)",
         },
       },
     },

@@ -5,11 +5,14 @@ export enum Channel {
     PinFloatWin = "pin-float-win",
     TranslateText = "translate-text",
     GetPinStatus = "get-pin-status",
+    OnFloatWinHide = "on-float-win-hide",
 
     Translate = "translate",
     LanguageList = "language-list",
     GetAllTranslateApi = "get-all-translate-api",
     DetectLanguage = "detect-language",
+
+    TextToSpeech = "speech",
 }
 
 export enum TranslateReqType {

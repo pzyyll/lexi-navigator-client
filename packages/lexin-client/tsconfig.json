@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "jsx": "react",
+    "jsx": "react-jsx",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "target": "ESNext",
@@ -17,7 +17,9 @@
     "paths": {
       "@src/*": ["src/*"],
       "@themes/*": ["src/renderer/themes/*"],
-      "@system/*": ["src/system/*"],
+      "@themes": ["src/renderer/themes"],
+      "@icons/*": ["src/renderer/assets/icons/*"],
+      "@components/*": ["src/renderer/components/*"],
     }
   },
   "include": ["src/**/*"],

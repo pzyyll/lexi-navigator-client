@@ -1,8 +1,15 @@
 import React from "react";
-import { Box, fontSize, margin, maxHeight, padding, style } from "@mui/system";
+import { Box } from "@mui/system";
 import AppBar from "@mui/material/AppBar";
 import { ThemeProvider, styled } from "@mui/material/styles";
-import { CssBaseline, Menu, MenuItem, TextField, Toolbar } from "@mui/material";
+import {
+  CssBaseline,
+  Menu,
+  MenuItem,
+  TextareaAutosizeProps,
+  TextField,
+  Toolbar,
+} from "@mui/material";
 import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
 import IconButton from "@mui/material/IconButton";
 import SearchIcon from "@mui/icons-material/Search";
@@ -18,12 +25,32 @@ import PushPinIcon from "@mui/icons-material/PushPin";
 import Tooltip from "@mui/material/Tooltip";
 import LinearProgress from "@mui/material/LinearProgress";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import VolumeUpIcon from "@mui/icons-material/VolumeUp";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
+import Button from "@mui/material";
 
-import { translate, TranslateProps } from "../components/ipc/TranslateAPI";
+import {
+  translate,
+  detectLanguage,
+  TranslateProps,
+} from "@src/renderer/components/ipc/TranslateAPI";
+import { textToSpeech } from "@src/renderer/components/ipc/SpeechAPI";
 import { Channel, TranslateType } from "@src/common/const";
 import SvgDeeplLogo from "@icons/DeeplLogo";
 import SvgBaiduLogo from "@icons/BaiduLogo";
+
+import Themes from "@themes";
+import SvgGoogleTranslateLogo from "../assets/icons/GoogleTranslateLogo";
+
+import { configureStore } from "@reduxjs/toolkit";
+import { useDispatch, useSelector, Provider } from "react-redux";
+import type { TypedUseSelectorHook } from "react-redux";
+import TextSelector from "@components/TextSelector";
+import AudioPlayerIcon from "@components/AudioPlayerIcon";
+import { position } from "dom-helpers";
+import { right } from "@popperjs/core";
 
 // GlobalContextReducer
 
@@ -35,6 +62,9 @@ const globalInitialState = {
   api_type: TranslateType.DeepL,
   source_lang: "",
   target_lang: "",
+  source_text_expand: 0,
+  source_text_show_expand: false,
+  source_text_dyn_height: "auto",
 };
 
 // redux
@@ -44,37 +74,6 @@ const reduxGlobalReducer = (state = globalInitialState, action) => {
   }
   return { ...state, [action.type]: action.payload };
 };
-import { configureStore, createSlice } from "@reduxjs/toolkit";
-import { useDispatch, useSelector, Provider } from "react-redux";
-import type { TypedUseSelectorHook } from "react-redux";
-
-const GlobalStateSlice = createSlice({
-  name: "globalState",
-  initialState: globalInitialState,
-  reducers: {
-    source_text: (state, action) => {
-      state.source_text = action.payload;
-    },
-    target_text: (state, action) => {
-      state.target_text = action.payload;
-    },
-    progress_visible: (state, action) => {
-      state.progress_visible = action.payload;
-    },
-    pin_status: (state, action) => {
-      state.pin_status = action.payload;
-    },
-    api_type: (state, action) => {
-      state.api_type = action.payload;
-    },
-    source_lang: (state, action) => {
-      state.source_lang = action.payload;
-    },
-    target_lang: (state, action) => {
-      state.target_lang = action.payload;
-    },
-  },
-});
 
 const store = configureStore({
   reducer: reduxGlobalReducer,
@@ -91,18 +90,24 @@ function useGlobalStateDispatch(type: keyof GlobalState) {
   return (payload) => dispatch({ type, payload });
 }
 
-// useGlobalStateSelector((state) => state.target_text);
-// function useReduxGlobalState(type) {
-//   useGlobalStateSelector((state) => state[type]);
-//   return useSelector((state) => state[type]);
-// }
+enum SourceTextExpandActionType {
+  AutoOnFocus = 0x01,
+  OnSelected = 0x01 << 1,
+  ResetALL = AutoOnFocus | OnSelected,
+}
 
-// function useReduxGlobalDispatch(type) {
-//   const dispatch = useDispatch();
-//   return (payload) => dispatch({ type, payload });
-// }
-
-// redux end
+function setSourceTextExpandBit(
+  action_type: SourceTextExpandActionType,
+  expand,
+  state,
+  setter
+) {
+  if (expand) {
+    setter(state | action_type);
+  } else {
+    setter(state & ~action_type);
+  }
+}
 
 // todo add search histroy
 const searchHistory = [];
@@ -113,19 +118,10 @@ const apiIcons = {
   [TranslateType.Baidu]: () => <SvgBaiduLogo fontSize="small" viewBox="0 0 92 92" />,
   default: () => <SvgGoogleTranslateLogo fontSize="small" viewBox="0 0 300 300" />,
 };
-
-interface AnimTextFiledProps extends TextFieldProps {
-  focus: boolean;
-  searchIcon: any;
-}
-
 interface RequestTranslateProps extends TranslateProps {
   updateTarget: (text: string) => void;
   showProgress: (visible: string) => void;
 }
-
-import Themes from "@themes";
-import SvgGoogleTranslateLogo from "../assets/icons/GoogleTranslateLogo";
 
 const TopAppBar = styled(AppBar)(({ theme }) => ({
   //"-webkit-app-region": "drag",
@@ -134,6 +130,9 @@ const TopAppBar = styled(AppBar)(({ theme }) => ({
     WebkitAppRegion: "no-drag",
   },
   "& input": {
+    WebkitAppRegion: "no-drag",
+  },
+  "& textarea": {
     WebkitAppRegion: "no-drag",
   },
 }));
@@ -208,6 +207,9 @@ const requestTranslate = (props: RequestTranslateProps) => {
 };
 
 const AnimateTextField = styled(TextField)(({ theme }) => ({
+  "& .MuiInputBase-inputMultiline": {
+    overflow: "auto",
+  },
   "& .MuiInputBase-root": {
     padding: "0px",
   },
@@ -218,17 +220,109 @@ const AnimateTextField = styled(TextField)(({ theme }) => ({
       borderBottom: "none",
     },
   },
-  // "& .MuiFilledInput-underline:hover": {
-  //   borderBottom: "none",
-  // },
   "& .MuiFilledInput-input": {
     transition: `${theme.transitions.create("width", {
       duration: theme.transitions.duration.standard,
       easing: theme.transitions.easing.easeInOut,
     })}`,
     margin: "0",
+    padding: "0",
   },
 }));
+
+const StyledTextareaAutosize = styled(TextareaAutosize)(({ theme }) => ({
+  overflow: "auto !important",
+}));
+
+const CTextArea = React.forwardRef((props, ref) => {
+  const _ref = React.useRef(null);
+  const [_lineheight, _setlineheight] = React.useState(0);
+
+  console.log("CTextArea _lineheight", _lineheight);
+
+  // 内部使用_ref, 同时保证外部的ref可以被正确引用
+  React.useImperativeHandle(ref, () => _ref.current);
+
+  const setShowExpand = useGlobalStateDispatch("source_text_show_expand");
+  const isSourceTextExpand = useGlobalStateSelector((state) => state.source_text_expand);
+  const source_text = useGlobalStateSelector((state) => state.source_text);
+
+  const [windowHeight, setWindowHeight] = React.useState(window.innerHeight);
+
+  const maxheight = windowHeight - 100;
+
+  const { onChange, ...other } = props;
+
+  const moreThanOneLine = () => {
+    if (_lineheight == 0) {
+      return false;
+    }
+    console.log("moreThanOneLine", _ref.current.scrollHeight, _lineheight);
+    return _ref.current.scrollHeight > _lineheight;
+  };
+
+  const checkShowExpand = () => {
+    setShowExpand(moreThanOneLine());
+  };
+  checkShowExpand();
+
+  const _onChange = (e) => {
+    onChange && onChange(e);
+    checkShowExpand();
+  };
+
+  React.useEffect(() => {
+    setTimeout(checkShowExpand, 0);
+  }, [source_text]);
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      setWindowHeight(window.innerHeight);
+    };
+    window.addEventListener("resize", handleResize);
+
+    const checkRef = () => {
+      if (_ref.current) {
+        console.log("checkRef", _ref.current.scrollHeight);
+        _setlineheight(_ref.current.scrollHeight);
+      } else {
+        setTimeout(checkRef, 10);
+      }
+    };
+    checkRef();
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  const getMaxHeight = () => {
+    if (_lineheight == 0) {
+      return "auto";
+    }
+    return `${maxheight}px`;
+  };
+
+  const getMaxRows = () => {
+    if (_lineheight == 0) {
+      return 1;
+    }
+    return isSourceTextExpand ? 500 : 1;
+  };
+
+  return (
+    <StyledTextareaAutosize
+      ref={_ref}
+      {...other}
+      sx={{
+        maxHeight: getMaxHeight(),
+      }}
+      minRows={1}
+      maxRows={getMaxRows()}
+      onChange={_onChange}
+    />
+  );
+});
 
 const SearchBar = (props) => {
   const [focus, setFocus] = React.useState(false);
@@ -236,11 +330,19 @@ const SearchBar = (props) => {
   const setSourceText = useGlobalStateDispatch("source_text");
   const setTargetText = useGlobalStateDispatch("target_text");
   const setProgressVisible = useGlobalStateDispatch("progress_visible");
+  const progressVisible = useGlobalStateSelector((state) => state.progress_visible);
   const api_type = useGlobalStateSelector((state) => state.api_type);
   const source_lang = useGlobalStateSelector((state) => state.source_lang);
   const target_lang = useGlobalStateSelector((state) => state.target_lang);
-  const set_source_lang = useGlobalStateDispatch("source_lang");
-  const set_target_lang = useGlobalStateDispatch("target_lang");
+  const textRef = React.useRef(null);
+  const textInputRef = React.useRef(null);
+  const textFieldRef = React.useRef(null);
+  const show_expand = useGlobalStateSelector((state) => state.source_text_show_expand);
+  const sourceTextExpand = useGlobalStateSelector((state) => state.source_text_expand);
+  const setSourceTextExpand = useGlobalStateDispatch("source_text_expand");
+  const sourceTextDynHeight = useGlobalStateSelector(
+    (state) => state.source_text_dyn_height
+  );
 
   const CustomPopper = (props) => {
     return <Popper {...props} />;
@@ -263,15 +365,29 @@ const SearchBar = (props) => {
 
   const handleEnter = (e) => {
     if (e.key === "Enter") {
-      // handleRequestTranslate(e.target.value);
       setSourceText(e.target.value);
     }
   };
 
   const handleBlur = (e) => {
     setFocus(false);
-    // handleRequestTranslate(e.target.value);
     setSourceText(e.target.value);
+    setSourceTextExpandBit(
+      SourceTextExpandActionType.AutoOnFocus,
+      false,
+      sourceTextExpand,
+      setSourceTextExpand
+    );
+  };
+
+  const handleOnFocus = (e) => {
+    setFocus(true);
+    setSourceTextExpandBit(
+      SourceTextExpandActionType.AutoOnFocus,
+      true,
+      sourceTextExpand,
+      setSourceTextExpand
+    );
   };
 
   const onRecieveTranslateText = (arg) => {
@@ -279,22 +395,27 @@ const SearchBar = (props) => {
       return;
     }
     setSourceText(arg);
-    // handleRequestTranslate(arg);
+  };
+
+  const onWinHide = () => {
+    console.log("onWinHide");
+    textInputRef.current?.blur();
+    setSourceTextExpandBit(
+      SourceTextExpandActionType.ResetALL,
+      false,
+      sourceTextExpand,
+      setSourceTextExpand
+    );
   };
 
   React.useEffect(() => {
     window.electronAPI.receive(Channel.TranslateText, onRecieveTranslateText);
+    window.electronAPI.receive(Channel.OnFloatWinHide, onWinHide);
     return () => {
-      console.log("TranslateSimple Unmount");
       window.electronAPI.removeAll(Channel.TranslateText);
+      window.electronAPI.removeAll(Channel.OnFloatWinHide);
     };
   }, []);
-
-  // React.useEffect(() => {
-  //   if (sourceText) {
-  //     handleRequestTranslate(sourceText, "", "", true);
-  //   }
-  // }, [api_type]);
 
   React.useEffect(() => {
     if (sourceText) {
@@ -305,33 +426,101 @@ const SearchBar = (props) => {
   }, [target_lang, source_lang, sourceText]);
 
   return (
-    <Autocomplete
-      {...props}
-      PopperComponent={CustomPopper}
-      sx={{
-        flex: 1,
-        border: "none",
-      }}
-      freeSolo
-      id="input-translate-text"
-      options={searchHistory}
-      value={sourceText}
-      renderInput={(params) => (
-        <AnimateTextField
-          hiddenLabel
-          {...params}
-          InputProps={{
-            ...params.InputProps,
-            startAdornment: <FadeInOutSearchBtn focus={focus} size="small" />,
-          }}
-          sx={{ border: "none" }}
-          placeholder="Search ..."
-          onFocus={() => setFocus(true)}
-          onBlur={handleBlur}
-          onKeyDown={handleEnter}
-        />
-      )}
-    />
+    <Box sx={{ width: "100%", height: "auto", display: "flex", flexDirection: "column" }}>
+      <Autocomplete
+        {...props}
+        ref={textRef}
+        PopperComponent={CustomPopper}
+        sx={{
+          flex: 1,
+          border: "none",
+          height: sourceTextDynHeight,
+        }}
+        freeSolo
+        id="input-translate-text"
+        options={searchHistory}
+        value={sourceText}
+        readOnly={progressVisible == "visible"}
+        disableClearable
+        renderInput={(params) => {
+          const { endAdornment, ...InputProps } = params.InputProps;
+          return (
+            <AnimateTextField
+              hiddenLabel
+              {...params}
+              sx={{ border: "none", height: "100%" }}
+              ref={textFieldRef}
+              inputRef={textInputRef}
+              InputProps={{
+                ...InputProps,
+                sx: {
+                  height: "100%",
+                },
+                inputComponent: CTextArea,
+                inputProps: {
+                  ...params.inputProps,
+                },
+                startAdornment: (
+                  <FadeInOutSearchBtn
+                    focus={focus || sourceText.length > 0}
+                    size="small"
+                  />
+                ),
+                // endAdornment: (
+                //   <IconButton
+                //     size="small"
+                //     sx={{ padding: 0 }}
+                //     hidden={!show_expand}
+                //     onClick={() => {
+                //       setSourceTextExpand(!sourceTextExpand);
+                //     }}
+                //   >
+                //     {sourceTextExpand ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
+                //   </IconButton>
+                // ),
+              }}
+              placeholder="Search ..."
+              onFocus={handleOnFocus}
+              onBlur={handleBlur}
+              onKeyDown={handleEnter}
+              onChange={(e) => {
+                console.log("Auto onChange");
+              }}
+              multiline
+              maxRows={1}
+            />
+          );
+        }}
+      />
+      <IconButton
+        size="small"
+        disableRipple
+        sx={{
+          padding: 0,
+          height: "10px",
+        }}
+        hidden={!show_expand}
+        onClick={() => {
+          if (sourceTextExpand) {
+            setSourceTextExpandBit(
+              SourceTextExpandActionType.ResetALL,
+              false,
+              sourceTextExpand,
+              setSourceTextExpand
+            );
+          } else {
+            setSourceTextExpandBit(
+              SourceTextExpandActionType.OnSelected,
+              true,
+              sourceTextExpand,
+              setSourceTextExpand
+            );
+          }
+        }}
+      >
+        {sourceTextExpand ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
+      </IconButton>
+    </Box>
   );
 };
 
@@ -341,12 +530,6 @@ const StyledSpeedDial = styled(SpeedDial)(({ theme }) => ({
     bottom: theme.spacing(2),
     right: theme.spacing(2),
   },
-  // '&.MuiSpeedDial-directionDown, &.MuiSpeedDial-directionRight': {
-  //   '& .MuiSpeedDial-actions': {
-  //     "padding-top": "32px",
-  //     "margin-top": "-32px",
-  //   },
-  // },
 }));
 
 const Tips = {
@@ -356,8 +539,12 @@ const Tips = {
 const MoreButton = (props) => {
   const [open, setOpen] = React.useState(false);
   const targetText = useGlobalStateSelector((state) => state.target_text);
+  const targetLang = useGlobalStateSelector((state) => state.target_lang);
+  const api_type = useGlobalStateSelector((state) => state.api_type);
+  const setProgressVisible = useGlobalStateDispatch("progress_visible");
   const [tips, setTips] = React.useState("");
   const [tipsOpen, setTipsOpen] = React.useState(false);
+  const [audio] = React.useState(new Audio());
 
   const handleOpen = () => {
     console.log("handleOpen handleOpen");
@@ -391,20 +578,40 @@ const MoreButton = (props) => {
     }
   };
 
-  const handleOCR = () => {
+  const handleOCR = async () => {
     console.log("handleOCR handleOCR");
+  };
+
+  const handleSpeech = async () => {
+    console.log("handleSpeech handleSpeech");
+    if (!targetText) {
+      showTips("No text to speech");
+      return;
+    }
+    let lang = targetLang;
+    if (!lang) {
+      const result = await detectLanguage(targetText, api_type);
+      lang = result.code.toLowerCase();
+    }
+    setProgressVisible("visible");
+    const results = await textToSpeech(targetText, lang);
+    setProgressVisible("hidden");
+    audio.pause();
+    audio.src = results;
+    audio.volume = 1;
+    audio.play();
   };
 
   const actions = [
     { icon: <ContentCopyIcon />, name: "Copy", onclick: handleCopy },
     { icon: <CenterFocusStrongIcon />, name: "OCR", onclick: handleOCR },
+    { icon: <VolumeUpIcon />, name: "Speech", onclick: handleSpeech },
   ];
 
   return (
     <Box sx={{ width: "40px", height: "40px" }}>
       <Tooltip title={tips} placement="top-end" open={tipsOpen}>
         <StyledSpeedDial
-          direction="down"
           {...props}
           icon={<AutoFixHighIcon />}
           ariaLabel="More actions"
@@ -422,9 +629,9 @@ const MoreButton = (props) => {
               key={action.name}
               icon={action.icon}
               tooltipTitle={action.name}
-              onClick={() => {
+              onClick={async () => {
                 if (action.onclick) {
-                  action.onclick();
+                  await action.onclick();
                 }
                 setOpen(false);
               }}
@@ -446,7 +653,6 @@ const TranslateApiMenu = (props) => {
   const onMenuClose = () => {
     setAnchorEl(null);
   };
-  console.log("TranslateApiMenu", api_type, apiIcons[api_type] || apiIcons["default"]);
 
   return (
     <Box>
@@ -503,11 +709,12 @@ const TranslateApiMenu = (props) => {
 const LanguageList = React.memo((props) => {
   const { set_lang, lang, ...tfprops } = props;
 
-  const default_option = tfprops.options.find((o) => o.code == lang) || {name:"Auto", code:""};
+  const default_option = tfprops.options.find((o) => o.code == lang) || {
+    name: "Auto",
+    code: "",
+  };
 
   const [selectOption, setSelectOption] = React.useState(default_option);
-
-  console.log("LanguageList", lang, default_option, selectOption);
 
   React.useEffect(() => {
     setSelectOption(default_option);
@@ -545,14 +752,8 @@ const LanguageList = React.memo((props) => {
     stringify: getOptionLabel,
   });
 
-  const onBlur = (e) => {
-    console.log("LanguageList onBlur", e);
-  };
-  const onKeyDown = (e) => {
-    console.log("LanguageList onKeyDown", e);
-  };
   const onChange = (e, newOption) => {
-    console.log("LanguageList onChange", newOption);
+    // console.log("LanguageList onChange", newOption);
     setSelectOption(newOption);
     set_lang && set_lang(newOption.code);
   };
@@ -586,17 +787,21 @@ const LanguageList = React.memo((props) => {
         // const { InputProps, ...rest } = params;
         // const { endAdornment, ...inputProps } = InputProps;
         // const p = { ...rest, InputProps: { ...inputProps } };
-        return <TextF {...params} hiddenLabel size="small" variant="filled" margin="none" />;
+        return (
+          <TextF {...params} hiddenLabel size="small" variant="filled" margin="none" />
+        );
       }}
       renderOption={(props, option) => {
         return (
-          <Box component="li" {...props} sx={{ padding: "0px", cursor: "pointer", margin: "0px" }}>
+          <Box
+            component="li"
+            {...props}
+            sx={{ padding: "0px", cursor: "pointer", margin: "0px" }}
+          >
             {getOptionLabel(option)}
           </Box>
         );
       }}
-      onBlur={onBlur}
-      onKeyDown={onKeyDown}
     />
   );
 });
@@ -664,7 +869,10 @@ const LanguageListComp = (props) => {
   return (
     <>
       <TranslateApiMenu apis={{ apis, api_type, setApiType }} />
-      <Divider sx={{ height: 28, m: 0.5, border: "0.5px solid #000000" }} orientation="vertical" />
+      <Divider
+        sx={{ height: 28, m: 0.5, border: "0.5px solid #000000" }}
+        orientation="vertical"
+      />
       <Box sx={{ display: "flex", flexDirection: "row", width: "100%" }}>
         <Box flexGrow={2} sx={{ display: "flex", flexDirection: "row" }}>
           <LanguageList options={langs} set_lang={set_source_lang} lang={source_lang} />
@@ -698,7 +906,7 @@ const FooterToolBar = (props) => {
     <AppFooterBar position="sticky" sx={{ top: "auto", bottom: 0 }}>
       <Toolbar sx={{ width: "100%", height: "100%", bottom: 0, position: "absolute" }}>
         <LanguageListComp />
-        <MoreButton direction="left" />
+        <MoreButton direction="up" />
       </Toolbar>
     </AppFooterBar>
   );
@@ -772,24 +980,25 @@ function ContentComponent() {
 
 function Root() {
   return (
-    <Box sx={{ height: "100vh", width: "100vw", display: "flex", flexDirection: "column" }}>
+    <Box
+      sx={{ height: "100vh", width: "100vw", display: "flex", flexDirection: "column" }}
+    >
       <TopAppBar position="sticky">
         <Toolbar variant="regular">
-          {/* <IconButton size="medium" aria-label="menu">
-    <TranslateIcon />
-  </IconButton> */}
           <SearchBar />
-          {/* <Divider sx={{ height: 28, m: 0.5, border: "0.5px solid #000000" }} orientation="vertical" /> */}
-          {/* <MoreButton /> */}
-          <Box sx={{ width: "40px" }} />
+          <Box sx={{ width: "5px" }} />
           <CloseBtn />
         </Toolbar>
       </TopAppBar>
       <ProcessComponent />
-      <Box flex={1} sx={{ overflowY: "auto", padding: "5px 5px 0px 5px", marginBottom: "10px" }}>
+      <Box
+        flex={1}
+        sx={{ overflowY: "auto", padding: "5px 5px 0px 5px", marginBottom: "10px" }}
+      >
         <ContentComponent />
       </Box>
       <FooterToolBar />
+      <TextSelector onSelect={(text, point) => console.log("onSelect", text, point)} />
     </Box>
   );
 }

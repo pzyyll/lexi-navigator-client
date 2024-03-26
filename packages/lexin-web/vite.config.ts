@@ -15,7 +15,6 @@ export default defineConfig({
           if(id.includes("node_modules")) {
             return "vendor";
           }
-
           if(!routers) {
             routers = fs.readdirSync(path.resolve(__dirname, "src/routes"));
           }
@@ -28,7 +27,8 @@ export default defineConfig({
     }
   },
   root: "src",
-  base: "./",
+  base: "/",
+  publicDir: path.resolve(__dirname, "./public"),
   plugins: [react()],
   server: {
     proxy: {

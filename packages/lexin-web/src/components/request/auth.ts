@@ -6,7 +6,7 @@ enum ReqUrl {
 
 const headers = {
   accept: "application/json",
-  "Content-Type": "application/json",
+  "Content-Type": "application/x-www-form-urlencoded",
 };
 
 export const req_login = async (username: string, password: string, cftoken: string) => {
@@ -14,7 +14,7 @@ export const req_login = async (username: string, password: string, cftoken: str
   const res = await fetch(ReqUrl.login, {
     method: "POST",
     headers: headers,
-    body: JSON.stringify({ username, password, cftoken }),
+    body: new URLSearchParams({ username, password, cftoken }),
   });
   return res.json();
 };

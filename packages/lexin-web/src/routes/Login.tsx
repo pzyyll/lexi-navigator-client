@@ -118,6 +118,10 @@ export default function Login() {
     const password = data.get("username")?.toString() || "";
     // console.log("submitting form", cftRef.current);
     // cftRef.current?.reset();
+    if (cftRef.current?.isExpired()) {
+      console.log("expired");
+      return;
+    }
     req_login(username, password, cfToken).then((res) => {
       console.log("login response: ", res);
     });

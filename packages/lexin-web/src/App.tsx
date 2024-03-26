@@ -27,11 +27,9 @@ function App() {
   const [theme, setTheme] = React.useState(Themes.light);
   return (
     <React.StrictMode>
-      <ThemeProvider theme={Themes.global}>
+      <ThemeProvider theme={theme}>
         <CssBaseline />
-        <ThemeProvider theme={theme}>
           <RouterProvider router={router} />
-        </ThemeProvider>
       </ThemeProvider>
     </React.StrictMode>
   );

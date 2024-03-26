@@ -84,6 +84,7 @@ function createFloatWin() {
   floatWin.on("hide", () => {
     clearDelayCloseTimer();
     clearMouseEventOutWin();
+    floatWin?.webContents.send(Channel.OnFloatWinHide);
     floatWinDelayCloseTimer = setTimeout(() => {
       console.log("delay close floatwin");
       floatWin?.destroy();
@@ -198,9 +199,9 @@ function setMouseEventOutWin() {
     const winPos = floatWin?.getPosition();
     const winSize = floatWin?.getSize();
 
-    console.log("mouseEventId", x, y, winPos, winSize);
+    // console.log("mouseEventId", x, y, winPos, winSize);
     if (x < winPos[0] || y < winPos[1] || x > winPos[0] + winSize[0] || y > winPos[1] + winSize[1]) {
-      console.log("mouseEventId hideFloatWinNoReturnFocus");
+      // console.log("mouseEventId hideFloatWinNoReturnFocus");
       if (!isPinFloatWin) hideFloatWinNoReturnFocus();
     }
   });
