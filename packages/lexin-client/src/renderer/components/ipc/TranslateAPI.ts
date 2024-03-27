@@ -20,17 +20,21 @@ export async function detectLanguage(text: string, api_type: string) {
 }
 
 export async function translate(props: TranslateProps) {
-  let {text, source, target, api_type } = props;
+  let { text, source, target, api_type } = props;
   api_type = api_type || TranslateType.DeepL;
   try {
-    if (!target) {
-      const source_detect_lang = await detectLanguage(text, api_type)
-      const source_detect_lang_code = source_detect_lang.code.toLowerCase();
-      if (source_detect_lang_code.startsWith("zh")) {
-        target = "en";
-      } else {
-        target = "zh";
+    try {
+      if (!target) {
+        const source_detect_lang = await detectLanguage(text, api_type);
+        const source_detect_lang_code = source_detect_lang.code.toLowerCase();
+        if (source_detect_lang_code.startsWith("zh")) {
+          target = "en";
+        } else {
+          target = "zh";
+        }
       }
+    } catch (error) {
+      console.log("detect language error", error);
     }
     console.log("translate", text, source, target, api_type);
     const res = await window.electronAPI.invoke(Channel.Translate, {

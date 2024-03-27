@@ -2,14 +2,7 @@ import React from "react";
 import { Box } from "@mui/system";
 import AppBar from "@mui/material/AppBar";
 import { ThemeProvider, styled } from "@mui/material/styles";
-import {
-  CssBaseline,
-  Menu,
-  MenuItem,
-  TextareaAutosizeProps,
-  TextField,
-  Toolbar,
-} from "@mui/material";
+import { CssBaseline, Menu, MenuItem, TextField, Toolbar } from "@mui/material";
 import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
 import IconButton from "@mui/material/IconButton";
 import SearchIcon from "@mui/icons-material/Search";
@@ -29,7 +22,7 @@ import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
-import Button from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
 
 import {
   translate,
@@ -48,10 +41,6 @@ import { configureStore } from "@reduxjs/toolkit";
 import { useDispatch, useSelector, Provider } from "react-redux";
 import type { TypedUseSelectorHook } from "react-redux";
 import TextSelector from "@components/TextSelector";
-import AudioPlayerIcon from "@components/AudioPlayerIcon";
-import { position } from "dom-helpers";
-import { right } from "@popperjs/core";
-
 // GlobalContextReducer
 
 const globalInitialState = {
@@ -283,8 +272,8 @@ const CTextArea = React.forwardRef((props, ref) => {
 
     const checkRef = () => {
       if (_ref.current) {
-        console.log("checkRef", _ref.current.scrollHeight);
-        _setlineheight(_ref.current.scrollHeight);
+        console.log("checkRef", _ref.current.clientHeight, _ref.current.scrollHeight);
+        _setlineheight(_ref.current.clientHeight);
       } else {
         setTimeout(checkRef, 10);
       }
@@ -541,7 +530,10 @@ const MoreButton = (props) => {
   const targetText = useGlobalStateSelector((state) => state.target_text);
   const targetLang = useGlobalStateSelector((state) => state.target_lang);
   const api_type = useGlobalStateSelector((state) => state.api_type);
+  const sourceText = useGlobalStateSelector((state) => state.source_text);
+  const sourceLang = useGlobalStateSelector((state) => state.source_lang);
   const setProgressVisible = useGlobalStateDispatch("progress_visible");
+  const setTargetText = useGlobalStateDispatch("target_text");
   const [tips, setTips] = React.useState("");
   const [tipsOpen, setTipsOpen] = React.useState(false);
   const [audio] = React.useState(new Audio());
@@ -580,21 +572,28 @@ const MoreButton = (props) => {
 
   const handleOCR = async () => {
     console.log("handleOCR handleOCR");
+    window.electronAPI.send(Channel.ScreenShot);
   };
 
   const handleSpeech = async () => {
     console.log("handleSpeech handleSpeech");
-    if (!targetText) {
-      showTips("No text to speech");
+    const selectedText = window.getSelection()?.toString();
+    console.log("selectedText", selectedText);
+    if (!selectedText && !targetText) {
+      showTips("No text selected to speech");
       return;
     }
-    let lang = targetLang;
-    if (!lang) {
-      const result = await detectLanguage(targetText, api_type);
+    let lang = "";
+    const text = selectedText || targetText;
+    if (selectedText || !targetLang) {
+      const result = await detectLanguage(text, api_type);
       lang = result.code.toLowerCase();
+    } else {
+      lang = targetLang;
     }
+
     setProgressVisible("visible");
-    const results = await textToSpeech(targetText, lang);
+    const results = await textToSpeech(text, lang);
     setProgressVisible("hidden");
     audio.pause();
     audio.src = results;
@@ -602,10 +601,24 @@ const MoreButton = (props) => {
     audio.play();
   };
 
+  const handleRefresh = async () => {
+    requestTranslate(
+      {
+        text: sourceText,
+        updateTarget: setTargetText,
+        showProgress: setProgressVisible,
+        source: sourceLang,
+        target: targetLang,
+        api_type: api_type,
+      }
+    )
+  }
+
   const actions = [
     { icon: <ContentCopyIcon />, name: "Copy", onclick: handleCopy },
     { icon: <CenterFocusStrongIcon />, name: "OCR", onclick: handleOCR },
     { icon: <VolumeUpIcon />, name: "Speech", onclick: handleSpeech },
+    { icon: <RefreshIcon />, name: "Refresh", onclick: handleRefresh },
   ];
 
   return (
@@ -654,6 +667,13 @@ const TranslateApiMenu = (props) => {
     setAnchorEl(null);
   };
 
+  React.useEffect(() => {
+    window.electronAPI?.invoke(Channel.GetApiType).then((res) => {
+      console.log("GetApiType a", res);
+      if (res) setApiType(res);
+    });
+  }, [])
+
   return (
     <Box>
       <IconButton
@@ -692,6 +712,7 @@ const TranslateApiMenu = (props) => {
                   console.log("MenuItem", key);
                   onMenuClose();
                   setApiType(key);
+                  window.electronAPI?.send(Channel.SetApiType, key);
                   value.onClick && value.onClick(e);
                 }}
               >

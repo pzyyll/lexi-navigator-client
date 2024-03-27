@@ -13,6 +13,13 @@ export enum Channel {
     DetectLanguage = "detect-language",
 
     TextToSpeech = "speech",
+
+    ScreenShot = "screenShot",
+    ScreenShotEnd = "screenShotEnd",
+    CloseScreenShot = "closeScreenShot",
+
+    SetApiType = "set-api-type",
+    GetApiType = "get-api-type",
 }
 
 export enum TranslateReqType {

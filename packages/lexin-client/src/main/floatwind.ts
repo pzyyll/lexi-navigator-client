@@ -2,11 +2,12 @@ import log from "electron-log";
 
 import { createBaseWindow } from "./base";
 import { app, screen, BrowserWindow } from "electron";
-
-const { ipcMain, clipboard } = require("electron");
-const { kmhook } = require("kmhook");
-
 import { Channel } from "@src/common/const";
+import { ipcMain, clipboard } from "electron";
+
+import { get_db, set_db } from "./config";
+
+const { kmhook } = require("kmhook");
 
 let kmhook_listener;
 let floatWin: BrowserWindow | null = null;
@@ -29,7 +30,7 @@ function fakeFocusWindow() {
       y: -110,
       frame: false,
       transparent: true,
-      skipTaskbar: true
+      skipTaskbar: true,
     });
     fakeWin.loadURL("about:blank");
   }
@@ -93,7 +94,7 @@ function createFloatWin() {
       ipcMain.removeListener(Channel.CloseFloatWin, eventOnCloseFlat);
       ipcMain.removeListener(Channel.PinFloatWin, eventOnPinFloatWin);
       ipcMain.removeHandler(Channel.GetPinStatus);
-    }, 1000*60*5);
+    }, 1000 * 60 * 5);
   });
 
   floatWin.on("blur", () => {
@@ -120,11 +121,21 @@ function createFloatWin() {
 
   ipcMain.on(Channel.CloseFloatWin, eventOnCloseFlat);
   ipcMain.on(Channel.PinFloatWin, eventOnPinFloatWin);
+  ipcMain.on(Channel.SetApiType, async (event, arg) => {
+    console.log("SetApiType", arg);
+    set_db("api_type", arg);
+  });
 
   ipcMain.handle(Channel.GetPinStatus, async (event, ...args) => {
     return isPinFloatWin;
   });
-
+  ipcMain.handle(Channel.GetApiType, async (event, ...args) => {
+    try {
+      return await get_db("api_type");
+    } catch (e) {
+      return "";
+    }
+  });
 }
 
 function clearFloatWin() {
@@ -157,8 +168,8 @@ function getShowPosition(win) {
   return { x, y };
 }
 
-function triggerFloatWin(onShow?: () => void){
-  if (floatWin && floatWin.isDestroyed()){
+function triggerFloatWin(onShow?: () => void) {
+  if (floatWin && floatWin.isDestroyed()) {
     clearFloatWin();
   }
 
@@ -166,15 +177,15 @@ function triggerFloatWin(onShow?: () => void){
     onShow && onShow();
     if (floatWin && floatWin.isVisible() && floatWin.isFocused()) {
       return;
-    } 
-    
-    if (floatWin && !floatWin.isVisible()){
+    }
+
+    if (floatWin && !floatWin.isVisible()) {
       const { x, y } = getShowPosition(floatWin);
       setMouseEventOutWin();
       floatWin.show();
       floatWin.setPosition(x, y);
     }
-  }
+  };
 
   if (!floatWin) {
     createFloatWin();
@@ -200,7 +211,12 @@ function setMouseEventOutWin() {
     const winSize = floatWin?.getSize();
 
     // console.log("mouseEventId", x, y, winPos, winSize);
-    if (x < winPos[0] || y < winPos[1] || x > winPos[0] + winSize[0] || y > winPos[1] + winSize[1]) {
+    if (
+      x < winPos[0] ||
+      y < winPos[1] ||
+      x > winPos[0] + winSize[0] ||
+      y > winPos[1] + winSize[1]
+    ) {
       // console.log("mouseEventId hideFloatWinNoReturnFocus");
       if (!isPinFloatWin) hideFloatWinNoReturnFocus();
     }
@@ -217,10 +233,10 @@ function clearMouseEventOutWin() {
 function initFloatWinListener(main_win: BrowserWindow) {
   kmhook_listener = new kmhook.KMHook();
 
-  log.info("initFloatWinListener ...", kmhook_listener)
-  kmhook_listener.TestCallback(()=> {
-    log.info("initFloatWinListener TestCallback ...")
-  })
+  log.info("initFloatWinListener ...", kmhook_listener);
+  kmhook_listener.TestCallback(() => {
+    log.info("initFloatWinListener TestCallback ...");
+  });
 
   kmhook_listener.RegisterShortcut("command+c+c", () => {
     console.log("command+c+c");
@@ -230,19 +246,19 @@ function initFloatWinListener(main_win: BrowserWindow) {
         // console.log("sendClipboardText", text);
         floatWin?.webContents.send(Channel.TranslateText, text);
       }
-    }
+    };
     triggerFloatWin(sendClipboardText);
   });
 
   kmhook_listener.RegisterShortcut("option+option", () => {
     if (floatWin?.isVisible()) {
-      hideFloatWinNoReturnFocus()
+      hideFloatWinNoReturnFocus();
     } else {
       triggerFloatWin();
     }
   });
 
-  try{
+  try {
     kmhook_listener.Start();
   } catch (e) {
     log.error("initFloatWinListener Start error", e);
@@ -250,7 +266,7 @@ function initFloatWinListener(main_win: BrowserWindow) {
 
   app.on("will-quit", () => {
     console.log("will-quit floatwin listener");
-    clearFloatWin()
+    clearFloatWin();
     fakeWin?.destroy();
     fakeWin = null;
     kmhook_listener?.UnregisterAllShortcuts();

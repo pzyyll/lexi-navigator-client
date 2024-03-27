@@ -1,6 +1,11 @@
 import { app, ipcMain } from "electron";
 
-import { Translate, TranslateDeepL, TranslateBuidu } from "@src/common/translate_api/index";
+import {
+  Translate,
+  TranslateDeepL,
+  TranslateBuidu,
+  TranslateLexin,
+} from "@src/common/translate_api/index";
 import { TranslateType, Channel } from "@src/common/const";
 import { get_translate_config } from "./config";
 
@@ -14,7 +19,6 @@ interface TranslateWrapperProps {
 class TranslateWrapper {
   _translate: Translate;
   _props: TranslateWrapperProps;
-
 
   constructor(translate: Translate, props: TranslateWrapperProps & { class_type: any }) {
     this._translate = translate;
@@ -38,21 +42,23 @@ const translate_api_info = {
   [TranslateType.Baidu]: {
     class_type: TranslateBuidu,
   },
+  [TranslateType.Lexin]: {
+    class_type: TranslateLexin,
+  },
 };
 
 function initTranslateInstance() {
   for (const [type, cfg] of Object.entries(config)) {
     if (type in translate_api_info) {
-      const translate = new TranslateWrapper(
-        new translate_api_info[type].class_type(),
-        {type:type, ...translate_api_info[type]}
-      );
+      const translate = new TranslateWrapper(new translate_api_info[type].class_type(), {
+        type: type,
+        ...translate_api_info[type],
+      });
       translate.translate.init(cfg);
       translates.set(type, translate);
     }
   }
 }
-
 
 async function eventOnTranslate(event, arg) {
   const { text, source, target, api_type } = arg;
@@ -62,7 +68,6 @@ async function eventOnTranslate(event, arg) {
     return result;
   }
 }
-
 
 async function eventOnLanguageList(event, arg) {
   const { api_type, displayName } = arg;
@@ -94,7 +99,7 @@ function initEventListeners() {
   ipcMain.handle(Channel.DetectLanguage, eventOnDetectLanguage);
 }
 
-function clearEventListeners() { 
+function clearEventListeners() {
   ipcMain.removeHandler(Channel.Translate);
   ipcMain.removeHandler(Channel.LanguageList);
   ipcMain.removeHandler(Channel.GetAllTranslateApi);

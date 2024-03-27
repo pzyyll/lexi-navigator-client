@@ -2,15 +2,19 @@ import React from "react";
 import Box from "@mui/material/Box";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import StopCircleIcon from "@mui/icons-material/StopCircle";
-import { IconButton } from "@mui/material";
+import { IconButton, styled } from "@mui/material";
 import CircularProgress from "@mui/material/CircularProgress";
 
 interface AudioPlayerIconProps {
   src?: string;
   state: string;
-  onClick?: (state:string) => string;
+  onClick?: (state: string) => string;
   props: any;
 }
+
+const StyledBox = styled(Box)(({ theme }) => ({
+  WebkitAppRegion: "no-drag",
+}));
 
 export default function AudioPlayerIcon(props: AudioPlayerIconProps) {
   const { src, state, onClick } = props;
@@ -24,11 +28,11 @@ export default function AudioPlayerIcon(props: AudioPlayerIconProps) {
   function renderIcon() {
     switch (_state) {
       case "playing":
-        return <StopCircleIcon />;
+        return <StopCircleIcon sx={{ width: "100%", height: "100%" }} />;
       case "loading":
-        return <CircularProgress size={22} />;
+        return <CircularProgress size={16} />;
       default:
-        return <VolumeUpIcon />;
+        return <VolumeUpIcon sx={{ width: "100%", height: "100%" }} />;
     }
   }
 
@@ -41,7 +45,7 @@ export default function AudioPlayerIcon(props: AudioPlayerIconProps) {
   }
 
   return (
-    <Box
+    <StyledBox
       {...props}
       sx={{
         ...props.sx,
@@ -49,20 +53,10 @@ export default function AudioPlayerIcon(props: AudioPlayerIconProps) {
         alignItems: "center",
         justifyContent: "center",
         flexDirection: "column",
-        height: "24px",
-        width: "24px",
+        height: "18px",
+        width: "18px",
       }}
     >
-      <Box
-        component="audio"
-        ref={_audioRef}
-        src={src}
-        onEnded={handleEnded}
-        onPlay={handleOnPlay}
-      >
-        Your browser does not support the
-        <code>audio</code> element.
-      </Box>
       <IconButton
         size="small"
         disableRipple
@@ -77,6 +71,16 @@ export default function AudioPlayerIcon(props: AudioPlayerIconProps) {
       >
         {renderIcon()}
       </IconButton>
-    </Box>
+      <StyledBox
+        component="audio"
+        ref={_audioRef}
+        src={src}
+        onEnded={handleEnded}
+        onPlay={handleOnPlay}
+      >
+        Your browser does not support the
+        <code>audio</code> element.
+      </StyledBox>
+    </StyledBox>
   );
 }

@@ -5,6 +5,7 @@ import { createBaseWindow } from "./base";
 import { initFloatWinListener, ClearFloatWinResource } from "./floatwind";
 import * as TranslateModule from "./translate"
 import * as Speech from "./speech";
+import * as ScreenShot from "./screenshot";
 
 log.transports.file.level = "info";
 log.transports.console.level = "info";
@@ -141,6 +142,7 @@ const init = () => {
   initAppTray();
   TranslateModule.initTanslateModule();
   Speech.initSpeech();
+  ScreenShot.init();
 };
 
 // This method will be called when Electron has finished
@@ -169,6 +171,7 @@ app.on("before-quit", () => {
   TranslateModule.clear();
   ClearFloatWinResource();
   Speech.clear();
+  ScreenShot.clear();
 });
 
 app.on("will-quit", () => {

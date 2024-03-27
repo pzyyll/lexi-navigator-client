@@ -29,7 +29,7 @@ function App() {
     <React.StrictMode>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-          <RouterProvider router={router} />
+        <RouterProvider router={router} />
       </ThemeProvider>
     </React.StrictMode>
   );

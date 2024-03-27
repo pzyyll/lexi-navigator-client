@@ -6,6 +6,7 @@ import { CssBaseline } from "@mui/material";
 
 import Home from "./routers/Home";
 import TranslateSimple from "./routers/TranslateSimple";
+import ScreenShot from "./routers/ScreenShot";
 
 import Themes from "@themes";
 
@@ -15,6 +16,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 const routers = [
   { path: "/", element: <Home /> },
   { path: "/translate_simple", element: <TranslateSimple /> },
+  { path: "/screenshot", element: <ScreenShot /> },
 ];
 
 const router = window.electronAPI
