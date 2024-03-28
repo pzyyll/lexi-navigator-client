@@ -7,7 +7,20 @@ const dbPath = app.getPath("userData") + "/config.db";
 
 const configdb = new level.Level(dbPath, { valueEncoding: "json" });
 
-let config;
+interface LexinSvrConfig {
+  url: string;
+  token: string;
+}
+
+interface Config {
+  translate: any;
+  speech: any;
+  lexinsvr: LexinSvrConfig;
+}
+
+
+let config: Config = null;
+
 
 function loadConfig() {
   // Load the configuration from the main process
@@ -16,18 +29,24 @@ function loadConfig() {
   }
   const jsonString = fs.readFileSync(configPath, "utf-8");
   config = JSON.parse(jsonString);
-  console.log("get_translate_config", config);
+  if (!config) {
+    config = { translate: {}, speech: {} };
+    console.error("Failed to load config");
+  }
 }
 
 loadConfig();
 
 export function get_translate_config() {
-  console.log("get_translate_config", config.translate);
   return config.translate;
 }
 
 export function get_speech_config() {
   return config.speech;
+}
+
+export function get_lexinsvr_config() : LexinSvrConfig {
+  return config.lexinsvr;
 }
 
 export async function get_db(key) {

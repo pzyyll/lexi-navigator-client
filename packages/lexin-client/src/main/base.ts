@@ -23,7 +23,7 @@ const createBaseWindow = (router = "", props: any) => {
     log.info("startUrl:", startUrl.href);
     window.loadURL(startUrl.href);
   } else {
-    const basePath = path.join(__dirname, `./renderer/${MAIN_WINDOW_VITE_NAME}/index.html`);
+    const basePath = path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`);
     const startUrl = new URL(`file://${basePath}`);
     startUrl.hash = router ?? "/";
     log.info("startUrl", startUrl.href);

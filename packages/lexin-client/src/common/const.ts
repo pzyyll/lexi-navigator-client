@@ -20,6 +20,9 @@ export enum Channel {
 
     SetApiType = "set-api-type",
     GetApiType = "get-api-type",
+
+    IMG_TO_TEXT = "img-to-text",
+    ShowFloatWin = "show-float-win",
 }
 
 export enum TranslateReqType {

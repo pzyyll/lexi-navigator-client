@@ -65,12 +65,7 @@ export default class TranslateLexin implements ITranslate {
       method: "GET",
       url: new URL("/api/translate/languages", this.url).href,
       params: { dlc: "zh", api_type: "google" },
-      headers: {
-        Accept: "*/*",
-        "User-Agent": "Thunder Client (https://www.thunderclient.com)",
-        Authorization:
-          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4MTNiNTg3My02ZjIyLTQwNWQtODQ5MS0wYTliM2I3ZGFhY2EiLCJ2ZXIiOjIsImF0eSI6ImFwaSJ9.HE3VjR6ioawnLCNDR6iKVhvVJAhWD8di5wqTGrBfjlk",
-      },
+      headers: this.headers
     };
 
     const response = await axios.request(options);
@@ -96,6 +91,18 @@ export default class TranslateLexin implements ITranslate {
   }
 
   async detect(text: string): Promise<any> {
-    return await this.localDetect(text);
+    const result = await this.localDetect(text);
+    if (result) {
+      return result;
+    }
+    const options = {
+      method: "GET",
+      url: new URL("/api/translate/detect", this.url).href,
+      params: { text, api_type: "google" },
+      headers: this.headers
+    };
+    const response = await axios.request(options);
+    console.log("lexin detect", response.data.language_code)
+    return new Language(response.data.language_code);
   }
 }

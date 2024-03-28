@@ -37,11 +37,12 @@ const iconUrl = "https://raw.githubusercontent.com/pzyyll/lexi-navigator-client/
 const config: ForgeConfig = {
   packagerConfig: {
     icon: path.join(__dirname, "resources/assets/lnb"),
-    asar: false,
+    asar: true,
     appBundleId: "com.top.tarzipc.app",
     appVersion: "0.1.0",
     appCopyright: "Copyright @ 2024 for tarzipc.top",
     name: "LexiNavigator",
+    executableName: "LexiNavigator",
     derefSymlinks: true,
     extendInfo: {
       "NSAppleEventsUsageDescription": "This app requires access to AppleEvents for keyboard hooking",

@@ -6,6 +6,7 @@ import { initFloatWinListener, ClearFloatWinResource } from "./floatwind";
 import * as TranslateModule from "./translate"
 import * as Speech from "./speech";
 import * as ScreenShot from "./screenshot";
+import * as LexinAPI from "./lexin_api";
 
 log.transports.file.level = "info";
 log.transports.console.level = "info";
@@ -143,6 +144,7 @@ const init = () => {
   TranslateModule.initTanslateModule();
   Speech.initSpeech();
   ScreenShot.init();
+  LexinAPI.init();
 };
 
 // This method will be called when Electron has finished
@@ -172,6 +174,7 @@ app.on("before-quit", () => {
   ClearFloatWinResource();
   Speech.clear();
   ScreenShot.clear();
+  LexinAPI.clear();
 });
 
 app.on("will-quit", () => {

@@ -49,13 +49,18 @@ const translate_api_info = {
 
 function initTranslateInstance() {
   for (const [type, cfg] of Object.entries(config)) {
-    if (type in translate_api_info) {
-      const translate = new TranslateWrapper(new translate_api_info[type].class_type(), {
-        type: type,
-        ...translate_api_info[type],
-      });
-      translate.translate.init(cfg);
-      translates.set(type, translate);
+    console.log("initTranslateInstance", type, cfg);
+    try {
+      if (type in translate_api_info) {
+        const translate = new TranslateWrapper(new translate_api_info[type].class_type(), {
+          type: type,
+          ...translate_api_info[type],
+        });
+        translate.translate.init(cfg);
+        translates.set(type, translate);
+      }
+    } catch (error) {
+      console.error("initTranslateInstance", error);
     }
   }
 }

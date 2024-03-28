@@ -287,6 +287,10 @@ function initFloatWinListener(main_win: BrowserWindow) {
     fakeWin?.destroy();
     fakeWin = null;
   });
+
+  ipcMain.on(Channel.ShowFloatWin, (event, arg) => {
+    triggerFloatWin();
+  });
 }
 
 export function ClearFloatWinResource() {

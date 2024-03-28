@@ -321,6 +321,7 @@ const SearchBar = (props) => {
   const setProgressVisible = useGlobalStateDispatch("progress_visible");
   const progressVisible = useGlobalStateSelector((state) => state.progress_visible);
   const api_type = useGlobalStateSelector((state) => state.api_type);
+  const setApiType = useGlobalStateDispatch("api_type");
   const source_lang = useGlobalStateSelector((state) => state.source_lang);
   const target_lang = useGlobalStateSelector((state) => state.target_lang);
   const textRef = React.useRef(null);
@@ -398,6 +399,12 @@ const SearchBar = (props) => {
   };
 
   React.useEffect(() => {
+    window.electronAPI?.invoke(Channel.GetApiType).then((api_type: string) => {
+      if (api_type) {
+        setApiType(api_type);
+      }
+    });
+
     window.electronAPI.receive(Channel.TranslateText, onRecieveTranslateText);
     window.electronAPI.receive(Channel.OnFloatWinHide, onWinHide);
     return () => {
@@ -534,6 +541,7 @@ const MoreButton = (props) => {
   const sourceLang = useGlobalStateSelector((state) => state.source_lang);
   const setProgressVisible = useGlobalStateDispatch("progress_visible");
   const setTargetText = useGlobalStateDispatch("target_text");
+  const setSourceText = useGlobalStateDispatch("source_text");
   const [tips, setTips] = React.useState("");
   const [tipsOpen, setTipsOpen] = React.useState(false);
   const [audio] = React.useState(new Audio());
@@ -572,7 +580,15 @@ const MoreButton = (props) => {
 
   const handleOCR = async () => {
     console.log("handleOCR handleOCR");
-    window.electronAPI.send(Channel.ScreenShot);
+    // window.electronAPI.send(Channel.ScreenShot);
+    const imgbuf = await window.electronAPI?.invoke(Channel.ScreenShot);
+    window.electronAPI?.send(Channel.ShowFloatWin)
+    setProgressVisible("visible");
+    const text = await window.electronAPI?.invoke(Channel.IMG_TO_TEXT, imgbuf);
+    setProgressVisible("hidden");
+    if (text) {
+      setSourceText(text);
+    }
   };
 
   const handleSpeech = async () => {
@@ -602,17 +618,15 @@ const MoreButton = (props) => {
   };
 
   const handleRefresh = async () => {
-    requestTranslate(
-      {
-        text: sourceText,
-        updateTarget: setTargetText,
-        showProgress: setProgressVisible,
-        source: sourceLang,
-        target: targetLang,
-        api_type: api_type,
-      }
-    )
-  }
+    requestTranslate({
+      text: sourceText,
+      updateTarget: setTargetText,
+      showProgress: setProgressVisible,
+      source: sourceLang,
+      target: targetLang,
+      api_type: api_type,
+    });
+  };
 
   const actions = [
     { icon: <ContentCopyIcon />, name: "Copy", onclick: handleCopy },
@@ -666,13 +680,6 @@ const TranslateApiMenu = (props) => {
   const onMenuClose = () => {
     setAnchorEl(null);
   };
-
-  React.useEffect(() => {
-    window.electronAPI?.invoke(Channel.GetApiType).then((res) => {
-      console.log("GetApiType a", res);
-      if (res) setApiType(res);
-    });
-  }, [])
 
   return (
     <Box>
